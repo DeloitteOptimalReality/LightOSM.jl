@@ -1,0 +1,28 @@
+## Documentation: http://docs.travis-ci.com/user/languages/julia/
+language: julia
+
+codecov: true
+
+os:
+  - linux
+  - windows
+
+julia:
+  - 1.0
+  - 1  # latest release
+  - nightly
+
+notifications:
+  email: false
+  
+jobs:
+  allow_failures:
+  - julia: nightly
+  # include:
+  #   - stage: "Documentation"
+  #     julia: 1
+  #     os: linux
+  #     script:
+  #       - julia --project=docs/ -e 'using Pkg; Pkg.instantiate()'
+  #       - julia --project=docs/ docs/make.jl
+  #     after_success: skip
