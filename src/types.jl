@@ -1,7 +1,6 @@
 """
 Representation of a geospatial coordinates.
 
-# Parameters
 - `lat::AbstractFloat`: Latitude.
 - `lon::AbstractFloat`: Longitude.
 - `alt::AbstractFloat`: Altitude.
@@ -19,7 +18,6 @@ GeoLocation(point_vector::Vector{<:Vector{<:AbstractFloat}})::Vector{GeoLocation
 """
 OpenStreetMap node.
 
-# Parameters
 `T<:Integer`
 - `id::T`: OpenStreetMap node id.
 - `nodes::Vector{T}`: Node's GeoLocation.
@@ -34,7 +32,6 @@ end
 """
 OpenStreetMap way.
 
-# Parameters
 `T<:Integer`
 - `id::T`: OpenStreetMap way id.
 - `nodes::Vector{T}`: Ordered list of node ids making up the way.
@@ -49,17 +46,16 @@ end
 """
 OpenStreetMap turn restriction (relation).
 
-# Parameters
 `T<:Integer`
 - `id::T`: OpenStreetMap relation id.
 - `type::String`: Either a `via_way` or `via_node` turn restriction.
 - `tags::AbstractDict{String,Any}`: Metadata tags.
 - `from_way::T`: Incoming way id to the turn restriction.
 - `to_way::T`: Outgoing way id to the turn restriction.
-- `via_node::Union{T,Nothing} = nothing`: Node id at the centre of the turn restriction.
-- `via_way::Union{Vector{T},Nothing} = nothing`: Way id at the centre of the turn restriction.
-- `is_exclusion::Bool = false`: Turn restrictions such as `no_left_turn`, `no_right_turn` or `no_u_turn`.
-- `is_exclusive::Bool = false`: Turn restrictions such as `striaght_on_only`, `left_turn_only`, `right_turn_only`.
+- `via_node::Union{T,Nothing}`: Node id at the centre of the turn restriction.
+- `via_way::Union{Vector{T},Nothing}`: Way id at the centre of the turn restriction.
+- `is_exclusion::Bool`: Turn restrictions such as `no_left_turn`, `no_right_turn` or `no_u_turn`.
+- `is_exclusive::Bool`: Turn restrictions such as `striaght_on_only`, `left_turn_only`, `right_turn_only`.
 """
 @with_kw struct Restriction{T <: Integer}
     id::T
@@ -76,17 +72,21 @@ end
 """
 Container for storing OpenStreetMap node, way, relation and graph related obejcts.
 
-# Parameters
-`T<:Integer`
-- `id::T`: OpenStreetMap relation id.
-- `type::String`: Either a `via_way` or `via_node` turn restriction.
-- `tags::AbstractDict{String,Any}`: Metadata tags.
-- `from_way::T`: Incoming way id to the turn restriction.
-- `to_way::T`: Outgoing way id to the turn restriction.
-- `via_node::Union{T,Nothing} = nothing`: Node id at the centre of the turn restriction.
-- `via_way::Union{Vector{T},Nothing} = nothing`: Way id at the centre of the turn restriction.
-- `is_exclusion::Bool = false`: Turn restrictions such as `no_left_turn`, `no_right_turn` or `no_u_turn`.
-- `is_exclusive::Bool = false`: Turn restrictions such as `striaght_on_only`, `left_turn_only`, `right_turn_only`.
+`U <: Integer,T <: Integer,W <: Real`
+- `nodes::AbstractDict{T,Node{T}}`: Mapping of node ids to node objects.
+- `node_coordinates::Vector{Vector{W}}`: Vector of node coordinates [[lat, lon]...], indexed by graph vertices.
+- `highways::AbstractDict{T,Way{T}}`: Mapping of way ids to way objects.
+- `node_to_index::AbstractDict{T,U}`: Mapping of node ids to graph vertices.
+- `index_to_node::AbstractDict{U,T}`: Mapping of graph vertices to node ids.
+- `node_to_highway::AbstractDict{T,Vector{T}}`: Mapping of node ids to vector of way ids.
+- `edge_to_highway::AbstractDict{Vector{T},T}`: Mapping of edges (adjacent node pairs) to way ids.
+- `restrictions::AbstractDict{T,Restriction{T}}`: Mapping of relation ids to restriction objects.
+- `indexed_restrictions::Union{AbstractDict{U,Vector{MutableLinkedList{U}}},Nothing}`: Mapping of via node ids to ordered sequences of restricted node ids.
+- `graph::Union{AbstractGraph,Nothing}`: Either DiGraph, StaticDiGraph, SimpleWeightedDiGraph or MetaDiGraph.
+- `weights::Union{SparseMatrixCSC{W,U},Nothing}`: Sparse adjacency matrix (weights between graph vertices), either `:distance` (km), `:time` (hours) or `:lane_efficiency` (time scaled by number of lanes).
+- `dijkstra_states::Vector{Vector{U}}`: Vector of dijkstra parent states indexed by source vertices, used to retrieve shortest path from source vertex to any other vertex.
+- `kdtree::Union{KDTree,Nothing}`: KDTree used to calculate nearest nodes.
+- `weight_type::Union{Symbol,Nothing}`: Either `:distance`, `:time` or `:lane_efficiency`.
 """
 @with_kw mutable struct OSMGraph{U <: Integer,T <: Integer,W <: Real}
     nodes::AbstractDict{T,Node{T}} = Dict{T,Node{T}}()
@@ -108,7 +108,6 @@ end
 """
 OpenStreetMap building polygon.
 
-# Parameters
 `T<:Integer`
 - `id::T`: OpenStreetMap building way id.
 - `nodes::Vector{T}`: Ordered list of node ids making up the building polyogn.
@@ -123,7 +122,6 @@ end
 """
 OpenStreetMap building.
 
-# Parameters
 `T<:Integer`
 - `id::T`: OpenStreetMap building way id a simple polygon, relation id if a multi-polygon
 - `is_relation::Bool`: True if building is a a multi-polygon / relation.

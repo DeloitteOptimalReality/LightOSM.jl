@@ -122,7 +122,7 @@ function distance(A::Union{Vector{GeoLocation},GeoLocation,Vector{<:Node},Node,V
 end
 
 """
-    function heading(A::Vector{GeoLocation}, B::Vector{GeoLocation}, return_units::Symbol=:degrees)::Vector{AbstractFloat}
+    heading(A::Vector{GeoLocation}, B::Vector{GeoLocation}, return_units::Symbol=:degrees)::Vector{AbstractFloat}
 
 Calculates headings / bearings between a vector of origin GeoLocations A and vector of destination 
 GeoLocations B. Depending on the `return_units` chosen, the return angle is in range of [-π, π] if `:radians` or 

@@ -12,7 +12,7 @@ Creates an `OSMGraph` object from download OpenStreetMap network data, use with 
 # Arguments
 - `osm_data_object::Symbol`: OpenStreetMap network data parsed as either XML or Dictionary object depending on the download method.
 - `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, must match the network type used to download `osm_data_object`.
-- `weight_type::Symbol=:time`: Weight type for graph edges, pick from `:distance` (km), `:time` (km/h), `:lane_efficiency` (km/h scaled by number of lanes). 
+- `weight_type::Symbol=:time`: Weight type for graph edges, pick from `:distance` (km), `:time` (hours), `:lane_efficiency` (time scaled by number of lanes). 
 - `graph_type::Symbol=:static`: Type of `LightGraphs.AbstractGraph`, pick from `:static` (StaticDiGraph), `:light` (DiGraph), `:simple_weighted` (SimpleWeightedDiGraph), `:meta` (MetaDiGraph).
 - `precompute_dijkstra_states::Bool=false`: Set true to precompute dijkstra parent states for every source node in the graph, *NOTE* this may take a while and may not be possible for graphs with large amount of nodes due to memory limits.
 - `largest_connected_component::Bool=true`: Set true to keep only the largest connected components in the network.
@@ -55,7 +55,7 @@ Creates an `OSMGraph` object from a downloaded OpenStreetMap network data file, 
 # Arguments
 - `file_path::String`: OpenStreetMap network data file location.
 - `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, must match the network type used to download `osm_data_object`.
-- `weight_type::Symbol=:time`: Weight type for graph edges, pick from `:distance` (km), `:time` (km/h), `:lane_efficiency` (km/h scaled by number of lanes). 
+- `weight_type::Symbol=:time`: Weight type for graph edges, pick from `:distance` (km), `:time` (hours), `:lane_efficiency` (time scaled by number of lanes). 
 - `graph_type::Symbol=:static`: Type of `LightGraphs.AbstractGraph`, pick from `:static` (StaticDiGraph), `:light` (DiGraph), `:simple_weighted` (SimpleWeightedDiGraph), `:meta` (MetaDiGraph).
 - `precompute_dijkstra_states::Bool=false`: Set true to precompute dijkstra parent states for every source node in the graph, *NOTE* this may take a while and may not be possible for graphs with large amount of nodes due to memory limits.
 - `largest_connected_component::Bool=true`: Set true to keep only the largest connected components in the network.
@@ -103,7 +103,7 @@ Downloads OpenStreetMap network data and creates an `OSMGraph` object.
 - `metadata::Bool=false`: Set true to return metadata.
 - `download_format::Symbol=:osm`: Download format, either `:osm`, `:xml` or `json`.
 - `save_to_file_location::Union{String,Nothing}=nothing`: Specify a file location to save downloaded data to disk.
-- `weight_type::Symbol=:time`: Weight type for graph edges, pick from `:distance` (km), `:time` (km/h), `:lane_efficiency` (km/h scaled by number of lanes). 
+- `weight_type::Symbol=:time`: Weight type for graph edges, pick from `:distance` (km), `:time` (hours), `:lane_efficiency` (time scaled by number of lanes). 
 - `graph_type::Symbol=:static`: Type of `LightGraphs.AbstractGraph`, pick from `:static` (StaticDiGraph), `:light` (DiGraph), `:simple_weighted` (SimpleWeightedDiGraph), `:meta` (MetaDiGraph).
 - `precompute_dijkstra_states::Bool=false`: Set true to precompute dijkstra parent states for every source node in the graph, *NOTE* this may take a while and may not be possible for graphs with large amount of nodes due to memory limits.
 - `largest_connected_component::Bool=true`: Set true to keep only the largest connected components in the network.
@@ -346,7 +346,7 @@ function add_weights!(g::OSMGraph, weight_type::Symbol=:distance)
     elseif weight_type == :time
         weights = max.(distance(o_locations, d_locations, :haversine) ./ maxspeeds, eps(W))
     elseif weight_type == :lane_efficiency
-        weights = max.(distance(o_locations, d_locations, :haversine) ./ maxspeeds .* lane_efficiency, eps(W))
+        weights = max.(distance(o_locations, d_locations, :haversine) ./ (maxspeeds .* lane_efficiency), eps(W))
     end
 
     n = length(g.nodes)

@@ -12,6 +12,22 @@ function overpass_polygon_buildings_query(geojson_polygons::Vector{Vector{Any}},
     return overpass_query(filters, metadata, download_format)
 end
 
+"""
+    osm_network_from_place_name(;place_name::String,
+                                metadata::Bool=false,
+                                download_format::Symbol=:osm
+                                )::String
+
+Downloads OpenStreetMap buildings using any place name string.
+
+# Arguments
+- `place_name::String`: Any place name string used as a search argument to the Nominatim API.
+- `metadata::Bool=false`: Set true to return metadata.
+- `download_format::Symbol=:osm`: Download format, either `:osm`, `:xml` or `json`.
+
+# Return
+- `String`: OpenStreetMap buildings data response string.
+"""
 function osm_buildings_from_place_name(;place_name::String,
                                        metadata::Bool=false,
                                        download_format::Symbol=:osm
@@ -21,6 +37,28 @@ function osm_buildings_from_place_name(;place_name::String,
     return overpass_request(query)
 end
 
+"""
+    osm_network_from_bbox(;minlat::AbstractFloat,
+                          minlon::AbstractFloat,
+                          maxlat::AbstractFloat,
+                          maxlon::AbstractFloat,
+                          metadata::Bool=false,
+                          download_format::Symbol=:osm
+                          )::String
+
+Downloads OpenStreetMap buildings using bounding box coordinates.
+
+# Arguments
+- `minlat::AbstractFloat`: Bottom left bounding box latitude coordinate.
+- `minlon::AbstractFloat`: Bottom left bounding box longitude coordinate.
+- `maxlat::AbstractFloat`: Top right bounding box latitude coordinate.
+- `maxlon::AbstractFloat`: Top right bounding box longitude coordinate.
+- `metadata::Bool=false`: Set true to return metadata.
+- `download_format::Symbol=:osm`: Download format, either `:osm`, `:xml` or `json`.
+
+# Return
+- `String`: OpenStreetMap buildings data response string.
+"""
 function osm_buildings_from_bbox(;minlat::Float64,
                                  minlon::Float64,
                                  maxlat::Float64,
@@ -34,6 +72,24 @@ function osm_buildings_from_bbox(;minlat::Float64,
     return overpass_request(query)
 end
 
+"""
+    osm_network_from_point(;point::GeoLocation,
+                           radius::Number,
+                           metadata::Bool=false,
+                           download_format::Symbol=:osm
+                           )::String
+
+Downloads OpenStreetMap buildings using bounding box coordinates calculated from a centroid point and radius (km).
+
+# Arguments
+- `point::GeoLocation`: Centroid point to draw the bounding box around.
+- `radius::Number`: Distance (km) from centroid point to each bounding box corner.
+- `metadata::Bool=false`: Set true to return metadata.
+- `download_format::Symbol=:osm`: Download format, either `:osm`, `:xml` or `json`.
+
+# Return
+- `String`: OpenStreetMap buildings data response string.
+"""
 function osm_buildings_from_point(;point::GeoLocation,
                                   radius::Number,
                                   metadata::Bool=false,
@@ -55,11 +111,46 @@ function osm_buildings_downloader(download_method::Symbol)::Function
     end
 end
 
+"""
+    download_osm_buildings(download_method::Symbol;
+                           metadata::Bool=false,
+                           download_format::Symbol=:osm,
+                           save_to_file_location::Union{String,Nothing}=nothing,
+                           download_kwargs...
+                           )::Union{XMLDocument,Dict{String,Any}}
+
+Downloads OpenStreetMap buildings data by querying with a place name, bounding box, or centroid point.
+
+# Arguments
+- `download_method::Symbol`: Download method, choose from `:place_name`, `:bounding_box` or `:point`.
+- `metadata::Bool=false`: Set true to return metadata.
+- `download_format::Symbol=:osm`: Download format, either `:osm`, `:xml` or `json`.
+- `save_to_file_location::Union{String,Nothing}=nothing`: Specify a file location to save downloaded data to disk.
+
+# Required Download Kwargs
+
+*`download_method=:place_name`*
+- `place_name::String`: Any place name string used as a search argument to the Nominatim API.
+
+*`download_method=:bounding_box`*
+- `minlat::AbstractFloat`: Bottom left bounding box latitude coordinate.
+- `minlon::AbstractFloat`: Bottom left bounding box longitude coordinate.
+- `maxlat::AbstractFloat`: Top right bounding box latitude coordinate.
+- `maxlon::AbstractFloat`: Top right bounding box longitude coordinate.
+
+*`download_method=:point`*
+- `point::GeoLocation`: Centroid point to draw the bounding box around.
+- `radius::Number`: Distance (km) from centroid point to each bounding box corner.
+
+# Return
+- `Union{XMLDocument,Dict{String,Any}}`: OpenStreetMap buildings data parsed as either XML or Dictionary object depending on the download method.
+"""
 function download_osm_buildings(download_method::Symbol;
                                 metadata::Bool=false,
                                 download_format::Symbol=:osm,
                                 save_to_file_location::Union{String,Nothing}=nothing,
-                                download_kwargs...)
+                                download_kwargs...
+                                )::Union{XMLDocument,Dict{String,Any}}
     downloader = osm_buildings_downloader(download_method)
     data = downloader(metadata=metadata, download_format=download_format; download_kwargs...)
     @info "Downloaded osm buildings data from $(["$k: $v" for (k, v) in download_kwargs]) in $download_format format"
@@ -161,11 +252,49 @@ function parse_osm_buildings_dict(osm_buildings_dict::AbstractDict)::Dict{Intege
     return buildings
 end
 
+"""
+    buildings_from_object(buildings_xml_object::XMLDocument)::Dict{Integer,Building}
+
+Creates `Building` objects from data downloaded with `download_osm_buildings`.
+
+# Arguments
+- `buildings_xml_object::XMLDocument`: Buildings data downloaded in `:xml` or `:osm` format.
+
+# Return
+- `Dict{Integer,Building}`: Mapping from building relation/way ids to `Building` objects.
+"""
 function buildings_from_object(buildings_xml_object::XMLDocument)::Dict{Integer,Building}
     dict_to_parse = osm_dict_from_xml(buildings_xml_object)
     return parse_osm_buildings_dict(dict_to_parse)
 end
 
+"""
+    buildings_from_object(buildings_json_object::AbstractDict)::Dict{Integer,Building}
+
+Creates `Building` objects from data downloaded with `download_osm_buildings`.
+
+# Arguments
+- `buildings_json_object::AbstractDict`: Buildings data downloaded in `:json` format.
+
+# Return
+- `Dict{Integer,Building}`: Mapping from building relation/way ids to `Building` objects.
+"""
+function buildings_from_object(buildings_json_object::AbstractDict)::Dict{Integer,Building}
+    dict_to_parse = osm_dict_from_json(buildings_json_object)
+    return parse_osm_buildings_dict(dict_to_parse)
+end
+
+"""
+    buildings_from_file(file_path::String)::Dict{Integer,Building}
+
+Creates `Building` objects from OpenStreetMap data file (either `:osm`, `:xml` or `:json` format).
+
+# Arguments
+- `file_path::String`: Path to OpenStreetMap data file.
+
+# Return
+- `Dict{Integer,Building}`: Mapping from building relation/way ids to `Building` objects.
+"""
 function buildings_from_file(file_path::String)::Dict{Integer,Building}
     !isfile(file_path) && throw(ErrorException("Buildings file $file_path does not exist"))
     extension = split(file_path, '.')[end]
@@ -174,6 +303,40 @@ function buildings_from_file(file_path::String)::Dict{Integer,Building}
     return buildings_from_object(obj)
 end
 
+"""
+    buildings_from_download(download_method::Symbol;
+                            metadata::Bool=false,
+                            download_format::Symbol=:osm,
+                            save_to_file_location::Union{String,Nothing}=nothing,
+                            download_kwargs...
+                            )::Dict{Integer,Building}
+
+Downloads and Creates `Building` objects from OpenStreetMap APIs.
+
+# Arguments
+- `download_method::Symbol`: Download method, choose from `:place_name`, `:bounding_box` or `:point`.
+- `metadata::Bool=false`: Set true to return metadata.
+- `download_format::Symbol=:osm`: Download format, either `:osm`, `:xml` or `json`.
+- `save_to_file_location::Union{String,Nothing}=nothing`: Specify a file location to save downloaded data to disk.
+
+# Required Download Kwargs
+
+*`download_method=:place_name`*
+- `place_name::String`: Any place name string used as a search argument to the Nominatim API.
+
+*`download_method=:bounding_box`*
+- `minlat::AbstractFloat`: Bottom left bounding box latitude coordinate.
+- `minlon::AbstractFloat`: Bottom left bounding box longitude coordinate.
+- `maxlat::AbstractFloat`: Top right bounding box latitude coordinate.
+- `maxlon::AbstractFloat`: Top right bounding box longitude coordinate.
+
+*`download_method=:point`*
+- `point::GeoLocation`: Centroid point to draw the bounding box around.
+- `radius::Number`: Distance (km) from centroid point to each bounding box corner.
+
+# Return
+- `Dict{Integer,Building}`: Mapping from building relation/way ids to `Building` objects.
+"""
 function buildings_from_download(download_method::Symbol;
                                  metadata::Bool=false,
                                  download_format::Symbol=:osm,

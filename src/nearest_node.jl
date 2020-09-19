@@ -1,8 +1,8 @@
 """
-    function nearest_node(g::OSMGraph,
-                          points::Vector{GeoLocation},
-                          n_neighbours::Integer=1
-                          )::Tuple{Vector{Vector{Integer}}, Vector{Vector{AbstractFloat}}}
+    nearest_node(g::OSMGraph,
+                 points::Vector{GeoLocation},
+                 n_neighbours::Integer=1
+                 )::Tuple{Vector{Vector{Integer}}, Vector{Vector{AbstractFloat}}}
 
 Finds nearest nodes from a vector of GeoLocations using a `NearestNeighbors.jl` KDTree.
 

@@ -213,14 +213,14 @@ function overpass_bbox_network_query(bbox::Vector{<:AbstractFloat},
 end
 
 """
-    function osm_network_from_bbox(;minlat::AbstractFloat,
-                                   minlon::AbstractFloat,
-                                   maxlat::AbstractFloat,
-                                   maxlon::AbstractFloat,
-                                   network_type::Symbol=:drive,
-                                   metadata::Bool=false,
-                                   download_format::Symbol=:osm
-                                   )::String
+    osm_network_from_bbox(;minlat::AbstractFloat,
+                          minlon::AbstractFloat,
+                          maxlat::AbstractFloat,
+                          maxlon::AbstractFloat,
+                          network_type::Symbol=:drive,
+                          metadata::Bool=false,
+                          download_format::Symbol=:osm
+                          )::String
 
 Downloads an OpenStreetMap network using bounding box coordinates.
 
@@ -249,12 +249,12 @@ function osm_network_from_bbox(;minlat::AbstractFloat,
 end
 
 """
-    function osm_network_from_point(;point::GeoLocation,
-                                    radius::Number,
-                                    network_type::Symbol=:drive,
-                                    metadata::Bool=false,
-                                    download_format::Symbol=:osm
-                                    )::String
+    osm_network_from_point(;point::GeoLocation,
+                           radius::Number,
+                           network_type::Symbol=:drive,
+                           metadata::Bool=false,
+                           download_format::Symbol=:osm
+                           )::String
 
 Downloads an OpenStreetMap network using bounding box coordinates calculated from a centroid point and radius (km).
 
@@ -294,13 +294,13 @@ function osm_network_downloader(download_method::Symbol)::Function
 end
 
 """
-    function download_osm_network(download_method::Symbol;
-                                  network_type::Symbol=:drive,
-                                  metadata::Bool=false,
-                                  download_format::Symbol=:osm,
-                                  save_to_file_location::Union{String,Nothing}=nothing,
-                                  download_kwargs...
-                                  )::Union{XMLDocument,Dict{String,Any}}
+    download_osm_network(download_method::Symbol;
+                         network_type::Symbol=:drive,
+                         metadata::Bool=false,
+                         download_format::Symbol=:osm,
+                         save_to_file_location::Union{String,Nothing}=nothing,
+                         download_kwargs...
+                         )::Union{XMLDocument,Dict{String,Any}}
 
 Downloads an OpenStreetMap network by querying with a place name, bounding box, or centroid point.
 
