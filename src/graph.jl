@@ -415,7 +415,7 @@ function add_dijkstra_states!(g::OSMGraph{U,T,W}) where {U <: Integer,T <: Integ
     n = length(srcs)
     @info "Precomputing $n Dijkstra States, this might take a while..."
     n > 50000 && @warn "Precomputing and caching all $n Dijkstra States may not be possible due to memory limits"
-    g.dijkstra_states = Vector{U}(undef, n)
+    g.dijkstra_states = Vector{Vector{U}}(undef, n)
 
     Threads.@threads for src in srcs
         g.dijkstra_states[src] = dijkstra(g.graph, src, distmx=g.weights, restrictions=g.indexed_restrictions)
