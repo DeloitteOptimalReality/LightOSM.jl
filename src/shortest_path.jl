@@ -30,7 +30,7 @@ function shortest_path(g::OSMGraph,
     o_index = g.node_to_index[origin]
     d_index = g.node_to_index[destination]
 
-    if get(g.dijkstra_states, o_index, nothing) !== nothing
+    if isassigned(g.dijkstra_states, o_index)
         # State already exists
         parents = g.dijkstra_states[o_index]
 

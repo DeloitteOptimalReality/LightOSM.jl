@@ -35,7 +35,14 @@ function graph_from_object(osm_data_object::Union{XMLDocument,Dict};
     largest_connected_component && trim_to_largest_connected_component!(g, weight_type, graph_type)
     add_node_tags!(g)
     !(network_type in [:bike, :walk]) && add_indexed_restrictions!(g)
-    precompute_dijkstra_states && add_dijkstra_states!(g)
+
+    if precompute_dijkstra_states
+        add_dijkstra_states!(g)
+    else
+        U = DEFAULT_DATA_TYPES[:OSM_INDEX]
+        g.dijkstra_states = Vector{Vector{U}}(undef, length(g.nodes))
+    end
+
     add_kdtree!(g)
     @info "Created OSMGraph object with kwargs: network_type=$network_type, weight_type=$weight_type, graph_type=$graph_type, precompute_dijkstra_states=$precompute_dijkstra_states, largest_connected_component=$largest_connected_component"
     return g

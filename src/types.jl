@@ -100,7 +100,7 @@ Container for storing OpenStreetMap node, way, relation and graph related obejct
     indexed_restrictions::Union{AbstractDict{U,Vector{MutableLinkedList{U}}},Nothing} = nothing
     graph::Union{AbstractGraph,Nothing} = nothing
     weights::Union{SparseMatrixCSC{W,U},Nothing} = nothing
-    dijkstra_states::Vector{Vector{U}} = Vector{Vector{U}}()
+    dijkstra_states::Union{Vector{Vector{U}},Nothing} = nothing
     kdtree::Union{KDTree,Nothing} = nothing
     weight_type::Union{Symbol,Nothing} = nothing
 end
