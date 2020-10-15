@@ -21,6 +21,14 @@ const OSM_URLS = Dict(
 Exclusion filters used when querying different OpenStreetMap networks.
 """
 const WAY_EXCLUSION_FILTERS = Dict(
+     :drive_mainroads => Dict(
+        "area" => ["yes"],
+        "highway" => ["cycleway", "footway", "path", "pedestrian", "steps", "track", "corridor", "elevator", "escalator", "proposed", "construction", "bridleway", "abandoned", "platform", "raceway", "service", "residential"],
+        "motor_vehicle" => ["no"],
+        "motorcar" => ["no"],
+        "access" => ["private"],
+        "service" => ["parking", "parking_aisle", "driveway", "private", "emergency_access"]
+    ),
     :drive => Dict(
         "area" => ["yes"],
         "highway" => ["cycleway", "footway", "path", "pedestrian", "steps", "track", "corridor", "elevator", "escalator", "proposed", "construction", "bridleway", "abandoned", "platform", "raceway", "service"],
@@ -81,6 +89,7 @@ end
 OpenStreetMap query strings used for different transport networks, to test queries see `https://overpass-api.de/query_form.html`.
 """
 const WAY_FILTERS_QUERY = Dict(
+    :drive_mainroads => """["highway"]$(concatenate_exclusions(WAY_EXCLUSION_FILTERS[:drive_mainroads]))""",
     :drive => """["highway"]$(concatenate_exclusions(WAY_EXCLUSION_FILTERS[:drive]))""",
     :drive_service => """["highway"]$(concatenate_exclusions(WAY_EXCLUSION_FILTERS[:drive_service]))""",
     :walk => """["highway"]$(concatenate_exclusions(WAY_EXCLUSION_FILTERS[:walk]))""",
