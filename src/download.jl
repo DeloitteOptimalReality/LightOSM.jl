@@ -109,7 +109,7 @@ Forms an Overpass query string using geojosn polygon coordinates as a filter.
 # Return
 - `String`: Overpass query string.
 """
-function overpass_polygon_network_query(geojson_polygons::Vector{Vector{Any}},
+function overpass_polygon_network_query(geojson_polygons::AbstractVector{<:AbstractVector},
                                         network_type::Symbol=:drive,
                                         metadata::Bool=false,
                                         download_format::Symbol=:osm
@@ -181,6 +181,33 @@ function osm_network_from_place_name(;place_name::String,
     geojson_polygons = polygon_from_place_name(place_name)
     query = overpass_polygon_network_query(geojson_polygons, network_type, metadata, download_format)
     return overpass_request(query)
+end
+
+"""
+    osm_network_from_polygon(;polygon::AbstractVector,
+                             network_type::Symbol=:drive,
+                             metadata::Bool=false,
+                             download_format::Symbol=:osm
+                             )::String
+
+Downloads an OpenStreetMap network using a polygon.
+
+# Arguments
+- `polygon::AbstractVector`: Vector of longitude-latitude pairs.
+- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`.
+- `metadata::Bool=false`: Set true to return metadata.
+- `download_format::Symbol=:osm`: Download format, either `:osm`, `:xml` or `json`.
+
+# Return
+- `String`: OpenStreetMap network data response string.
+"""
+function osm_network_from_polygon(;polygon::AbstractVector{<:AbstractVector{<:Real}},
+                                  network_type::Symbol=:drive,
+                                  metadata::Bool=false,
+                                  download_format::Symbol=:osm
+                                  )::String
+    query = overpass_polygon_network_query([polygon], network_type, metadata, download_format)
+return overpass_request(query)
 end
 
 """
@@ -288,6 +315,8 @@ function osm_network_downloader(download_method::Symbol)::Function
         return osm_network_from_bbox
     elseif download_method == :point
         return osm_network_from_point
+    elseif download_method == :polygon
+        return osm_network_from_polygon
     else
         throw(ErrorException("OSM network downloader $download_method does not exist"))
     end
@@ -325,6 +354,9 @@ Downloads an OpenStreetMap network by querying with a place name, bounding box, 
 *`download_method=:point`*
 - `point::GeoLocation`: Centroid point to draw the bounding box around.
 - `radius::Number`: Distance (km) from centroid point to each bounding box corner.
+
+*`download_method=:polygon`*
+- `polygon::AbstractVector`: Vector of longitude-latitude pairs.
 
 # Network Types
 - `:drive`: Motorways excluding private and service ways.

@@ -130,6 +130,9 @@ Downloads OpenStreetMap network data and creates an `OSMGraph` object.
 - `point::GeoLocation`: Centroid point to draw the bounding box around.
 - `radius::Number`: Distance (km) from centroid point to each bounding box corner.
 
+*`download_method=:polygon`*
+- `polygon::AbstractVector`: Vector of longitude-latitude pairs.
+
 # Network Types
 - `:drive`: Motorways excluding private and service ways.
 - `:drive_service`: Motorways including private and service ways.
