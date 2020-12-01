@@ -89,14 +89,14 @@ Container for storing OpenStreetMap node, way, relation and graph related obejct
 - `weight_type::Union{Symbol,Nothing}`: Either `:distance`, `:time` or `:lane_efficiency`.
 """
 @with_kw mutable struct OSMGraph{U <: Integer,T <: Integer,W <: Real}
-    nodes::AbstractDict{T,Node{T}} = Dict{T,Node{T}}()
+    nodes::Dict{T,Node{T}} = Dict{T,Node{T}}()
     node_coordinates::Vector{Vector{W}} = Vector{Vector{W}}() # needed for astar heuristic
-    highways::AbstractDict{T,Way{T}} = Dict{T,Way{T}}()
-    node_to_index::AbstractDict{T,U} = OrderedDict{T,U}()
-    index_to_node::AbstractDict{U,T} = OrderedDict{U,T}()
-    node_to_highway::AbstractDict{T,Vector{T}} = DefaultDict{T,Vector{T}}(Vector{T})
-    edge_to_highway::AbstractDict{Vector{T},T} = Dict{Vector{T},T}()
-    restrictions::AbstractDict{T,Restriction{T}} = Dict{T,Restriction{T}}()
+    highways::Dict{T,Way{T}} = Dict{T,Way{T}}()
+    node_to_index::OrderedDict{T,U} = OrderedDict{T,U}()
+    index_to_node::OrderedDict{U,T} = OrderedDict{U,T}()
+    node_to_highway::DefaultDict{T,Vector{T}} = DefaultDict{T,Vector{T}}(Vector{T})
+    edge_to_highway::Dict{Vector{T},T} = Dict{Vector{T},T}()
+    restrictions::Dict{T,Restriction{T}} = Dict{T,Restriction{T}}()
     indexed_restrictions::Union{AbstractDict{U,Vector{MutableLinkedList{U}}},Nothing} = nothing
     graph::Union{AbstractGraph,Nothing} = nothing
     weights::Union{SparseMatrixCSC{W,U},Nothing} = nothing
