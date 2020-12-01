@@ -128,5 +128,25 @@ Extracts edge weights from a path using `g.weights`.
 - `Vector{W}`: Array of edge weights, distances are in km, time is in hours.
 """
 function weights_from_path(g::OSMGraph{U,T,W}, path::Vector{T})::Vector{W} where {U <: Integer,T <: Integer,W <: Real}
-    return [g.weights[g.node_to_index[path[i]], g.node_to_index[path[i + 1]]] for i in collect(1:length(path) - 1)]
+    return [g.weights[g.node_to_index[path[i]], g.node_to_index[path[i + 1]]] for i in 1:length(path) - 1]
+end
+
+"""
+    total_path_weight(g::OSMGraph{U,T,W}, path::Vector{T})::W where {U <: Integer,T <: Integer,W <: Real}
+
+Extract total edge weight along a path.
+
+# Arguments
+- `g::OSMGraph`: Graph container.
+- `path::Vector{T}`: Array of OpenStreetMap node ids.
+
+# Return
+- `sum::W`: Total path edge weight, distances are in km, time is in hours.
+"""
+function total_path_weight(g::OSMGraph{U,T,W}, path::Vector{T})::W where {U <: Integer,T <: Integer,W <: Real}
+    sum::Float64 = 0.0
+    for i in 1:length(path) - 1
+        sum += g.weights[g.node_to_index[path[i]], g.node_to_index[path[i + 1]]]
+    end
+    return sum
 end
