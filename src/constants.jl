@@ -69,7 +69,8 @@ const WAY_EXCLUSION_FILTERS = Dict(
         "area" => ["yes"],
         "highway" => ["proposed", "construction", "abandoned", "platform", "raceway"]
     ),
-    :none => Dict{AbstractString,Vector{AbstractString}}()
+    :none => Dict{AbstractString,Vector{AbstractString}}(),
+    :rail => Dict("highway" => ["proposed", "platform"])
 )
 
 """
@@ -96,14 +97,23 @@ const WAY_FILTERS_QUERY = Dict(
     :bike => """["highway"]$(concatenate_exclusions(WAY_EXCLUSION_FILTERS[:bike]))""",
     :all => """["highway"]$(concatenate_exclusions(WAY_EXCLUSION_FILTERS[:all]))""",
     :all_private => """["highway"]$(concatenate_exclusions(WAY_EXCLUSION_FILTERS[:all_private]))""",
-    :none => """["highway"]$(concatenate_exclusions(WAY_EXCLUSION_FILTERS[:none]))"""
+    :none => """["highway"]$(concatenate_exclusions(WAY_EXCLUSION_FILTERS[:none]))""",
+    :rail => """["railway"]$(concatenate_exclusions(WAY_EXCLUSION_FILTERS[:rail]))"""
 )
 
 """
-OpenStreetMap query strings used for turn restrictions, ignores ["restriction:conditional"] and ["restriction:hgv"].
+OpenStreetMap query strings used for getting relation data in addition to nodes and ways that are contained within.
 """
 const RELATION_FILTERS_QUERY = Dict(
-    :restriction => """["type"="restriction"]["restriction"][!"conditional"][!"hgv"]"""
+    :drive_mainroads => """["type"="restriction"]["restriction"][!"conditional"][!"hgv"]""",
+    :drive => """["type"="restriction"]["restriction"][!"conditional"][!"hgv"]""",
+    :drive_service => """["type"="restriction"]["restriction"][!"conditional"][!"hgv"]""",
+    :walk => nothing,
+    :bike => nothing,
+    :all => """["type"="restriction"]["restriction"][!"conditional"][!"hgv"]""",
+    :all_private => """["type"="restriction"]["restriction"][!"conditional"][!"hgv"]""",
+    :none => nothing,
+    :rail => nothing
 )
 
 """

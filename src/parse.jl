@@ -96,6 +96,11 @@ Determine if way is of highway type given osm way tags dictionary.
 is_highway(tags::AbstractDict)::Bool = haskey(tags, "highway") ? true : false
 
 """
+Determine if way is of railway type given osm way tags dictionary.
+"""
+is_railway(tags::AbstractDict)::Bool = haskey(tags, "railway") ? true : false
+
+"""
 Determine if way matches the specified network type.
 """
 function matches_network_type(tags::AbstractDict, network_type::Symbol)::Bool
@@ -211,6 +216,20 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict, network_type::Sy
                 union!(highway_nodes, nds)
                 id = way["id"]
                 highways[id] = Way(id, nds, tags)
+            elseif is_railway(tags) && matches_network_type(tags, network_type)
+                tags["rail_type"] = haskey(tags,"railway") ? tags["railway"] : "unknown"
+                tags["electrified"] = haskey(tags,"electrified") ? tags["electrified"] : "unknown"
+                tags["gauge"] = haskey(tags,"gauge") ? tags["gauge"] : nothing
+                tags["usage"] = haskey(tags,"usage") ? tags["usage"] :  "unknown"
+                tags["name"] = haskey(tags,"name") ? tags["name"] : "unknown"
+                tags["lanes"] = haskey(tags,"tracks") ? tags["tracks"] : 1
+                tags["maxspeed"] = maxspeed(tags)
+                tags["oneway"] = is_oneway(tags)
+                tags["reverseway"] = is_reverseway(tags)
+                nds = way["nodes"]
+                union!(highway_nodes, nds)
+                id = way["id"]
+                highways[id] = Way(id, nds, tags)
             end
         end
     end
@@ -228,7 +247,7 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict, network_type::Sy
     end
     
     restrictions = Dict{T,Restriction{T}}()
-    if network_type != :walk && network_type != :bike
+    if haskey(osm_network_dict, "relation")
         for relation in osm_network_dict["relation"]
             if haskey(relation, "tags") && haskey(relation, "members")
                 tags = relation["tags"]

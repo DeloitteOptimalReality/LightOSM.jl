@@ -11,7 +11,7 @@ Creates an `OSMGraph` object from download OpenStreetMap network data, use with 
 
 # Arguments
 - `osm_data_object::Symbol`: OpenStreetMap network data parsed as either XML or Dictionary object depending on the download method.
-- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, must match the network type used to download `osm_data_object`.
+- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, `:rail`, must match the network type used to download `osm_data_object`.
 - `weight_type::Symbol=:time`: Weight type for graph edges, pick from `:distance` (km), `:time` (hours), `:lane_efficiency` (time scaled by number of lanes). 
 - `graph_type::Symbol=:static`: Type of `LightGraphs.AbstractGraph`, pick from `:static` (StaticDiGraph), `:light` (DiGraph), `:simple_weighted` (SimpleWeightedDiGraph), `:meta` (MetaDiGraph).
 - `precompute_dijkstra_states::Bool=false`: Set true to precompute dijkstra parent states for every source node in the graph, *NOTE* this may take a while and may not be possible for graphs with large amount of nodes due to memory limits.
@@ -61,7 +61,7 @@ Creates an `OSMGraph` object from a downloaded OpenStreetMap network data file, 
 
 # Arguments
 - `file_path::String`: OpenStreetMap network data file location.
-- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, must match the network type used to download `osm_data_object`.
+- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, `:rail`, must match the network type used to download `osm_data_object`.
 - `weight_type::Symbol=:time`: Weight type for graph edges, pick from `:distance` (km), `:time` (hours), `:lane_efficiency` (time scaled by number of lanes). 
 - `graph_type::Symbol=:static`: Type of `LightGraphs.AbstractGraph`, pick from `:static` (StaticDiGraph), `:light` (DiGraph), `:simple_weighted` (SimpleWeightedDiGraph), `:meta` (MetaDiGraph).
 - `precompute_dijkstra_states::Bool=false`: Set true to precompute dijkstra parent states for every source node in the graph, *NOTE* this may take a while and may not be possible for graphs with large amount of nodes due to memory limits.
@@ -106,7 +106,7 @@ Downloads OpenStreetMap network data and creates an `OSMGraph` object.
 
 # Arguments
 - `download_method::Symbol`: Download method, choose from `:place_name`, `:bounding_box` or `:point`.
-- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`.
+- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, `:rail`.
 - `metadata::Bool=false`: Set true to return metadata.
 - `download_format::Symbol=:osm`: Download format, either `:osm`, `:xml` or `json`.
 - `save_to_file_location::Union{String,Nothing}=nothing`: Specify a file location to save downloaded data to disk.
@@ -115,7 +115,7 @@ Downloads OpenStreetMap network data and creates an `OSMGraph` object.
 - `precompute_dijkstra_states::Bool=false`: Set true to precompute dijkstra parent states for every source node in the graph, *NOTE* this may take a while and may not be possible for graphs with large amount of nodes due to memory limits.
 - `largest_connected_component::Bool=true`: Set true to keep only the largest connected components in the network.
 
-# Required Download Kwargs
+# Required kwargs each Download Method
 
 *`download_method=:place_name`*
 - `place_name::String`: Any place name string used as a search argument to the Nominatim API.
@@ -141,6 +141,7 @@ Downloads OpenStreetMap network data and creates an `OSMGraph` object.
 - `:all`: All motorways, walkways and cycleways excluding private ways.
 - `:all_private`: All motorways, walkways and cycleways including private ways.
 - `:none`: No network filters.
+- `:rail`: Railways excluding proposed and platform.
 
 # Return
 - `OSMGraph`: Container for storing OpenStreetMap node, way, relation and graph related obejcts.
