@@ -5,17 +5,19 @@
                       graph_type::Symbol=:static,
                       precompute_dijkstra_states::Bool=false,
                       largest_connected_component::Bool=true
+                      restriction_type::Symbol=:default
                       )::OSMGraph
 
 Creates an `OSMGraph` object from download OpenStreetMap network data, use with `download_osm_network`.
 
 # Arguments
 - `osm_data_object::Symbol`: OpenStreetMap network data parsed as either XML or Dictionary object depending on the download method.
-- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, must match the network type used to download `osm_data_object`.
+- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, `:rail`
 - `weight_type::Symbol=:time`: Weight type for graph edges, pick from `:distance` (km), `:time` (hours), `:lane_efficiency` (time scaled by number of lanes). 
 - `graph_type::Symbol=:static`: Type of `LightGraphs.AbstractGraph`, pick from `:static` (StaticDiGraph), `:light` (DiGraph), `:simple_weighted` (SimpleWeightedDiGraph), `:meta` (MetaDiGraph).
 - `precompute_dijkstra_states::Bool=false`: Set true to precompute dijkstra parent states for every source node in the graph, *NOTE* this may take a while and may not be possible for graphs with large amount of nodes due to memory limits.
 - `largest_connected_component::Bool=true`: Set true to keep only the largest connected components in the network.
+- `restriction_type::Symbol=:default`: Restriction type, choose from :default, :road_turn_restrictions or :none
 
 # Return
 - `OSMGraph`: Container for storing OpenStreetMap node, way, relation and graph related obejcts.
@@ -25,9 +27,11 @@ function graph_from_object(osm_data_object::Union{XMLDocument,Dict};
                            weight_type::Symbol=:time,
                            graph_type::Symbol=:static,
                            precompute_dijkstra_states::Bool=false,
-                           largest_connected_component::Bool=true
+                           largest_connected_component::Bool=true,
+                           restriction_type::Symbol=:road_turn_restrictions
                            )::OSMGraph
-    g = init_graph_from_object(osm_data_object, network_type)
+    g = init_graph_from_object(osm_data_object, network_type, restriction_type)
+    # TODO refactor and genericise for train graphs
     add_node_and_edge_mappings!(g)
     add_weights!(g, weight_type)
     add_graph!(g, graph_type)
@@ -61,11 +65,12 @@ Creates an `OSMGraph` object from a downloaded OpenStreetMap network data file, 
 
 # Arguments
 - `file_path::String`: OpenStreetMap network data file location.
-- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, must match the network type used to download `osm_data_object`.
+- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, `:rail`
 - `weight_type::Symbol=:time`: Weight type for graph edges, pick from `:distance` (km), `:time` (hours), `:lane_efficiency` (time scaled by number of lanes). 
 - `graph_type::Symbol=:static`: Type of `LightGraphs.AbstractGraph`, pick from `:static` (StaticDiGraph), `:light` (DiGraph), `:simple_weighted` (SimpleWeightedDiGraph), `:meta` (MetaDiGraph).
 - `precompute_dijkstra_states::Bool=false`: Set true to precompute dijkstra parent states for every source node in the graph, *NOTE* this may take a while and may not be possible for graphs with large amount of nodes due to memory limits.
 - `largest_connected_component::Bool=true`: Set true to keep only the largest connected components in the network.
+- `restriction_type::Symbol=:default`: Restriction type, choose from :default, :road_turn_restrictions or :none
 
 # Return
 - `OSMGraph`: Container for storing OpenStreetMap node, way, relation and graph related obejcts.
@@ -75,7 +80,8 @@ function graph_from_file(file_path::String;
                          weight_type::Symbol=:time,
                          graph_type::Symbol=:static,
                          precompute_dijkstra_states::Bool=false,
-                         largest_connected_component::Bool=true
+                         largest_connected_component::Bool=true,
+                         restriction_type::Symbol=:default
                          )::OSMGraph
     !isfile(file_path) && throw(ErrorException("Graph file $file_path does not exist"))
     extension = split(file_path, '.')[end]
@@ -86,7 +92,8 @@ function graph_from_file(file_path::String;
                              weight_type=weight_type,
                              graph_type=graph_type,
                              precompute_dijkstra_states=precompute_dijkstra_states,
-                             largest_connected_component=largest_connected_component)
+                             largest_connected_component=largest_connected_component,
+                             restriction_type=restriction_type)
 end
 
 """
@@ -99,6 +106,7 @@ end
                         graph_type::Symbol=:static,
                         precompute_dijkstra_states::Bool=false,
                         largest_connected_component::Bool=true,
+                        restriction_type::Symbol=:default
                         download_kwargs...
                         )::OSMGraph
 
@@ -106,7 +114,7 @@ Downloads OpenStreetMap network data and creates an `OSMGraph` object.
 
 # Arguments
 - `download_method::Symbol`: Download method, choose from `:place_name`, `:bounding_box` or `:point`.
-- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`.
+- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, `:rail`
 - `metadata::Bool=false`: Set true to return metadata.
 - `download_format::Symbol=:osm`: Download format, either `:osm`, `:xml` or `json`.
 - `save_to_file_location::Union{String,Nothing}=nothing`: Specify a file location to save downloaded data to disk.
@@ -114,6 +122,7 @@ Downloads OpenStreetMap network data and creates an `OSMGraph` object.
 - `graph_type::Symbol=:static`: Type of `LightGraphs.AbstractGraph`, pick from `:static` (StaticDiGraph), `:light` (DiGraph), `:simple_weighted` (SimpleWeightedDiGraph), `:meta` (MetaDiGraph).
 - `precompute_dijkstra_states::Bool=false`: Set true to precompute dijkstra parent states for every source node in the graph, *NOTE* this may take a while and may not be possible for graphs with large amount of nodes due to memory limits.
 - `largest_connected_component::Bool=true`: Set true to keep only the largest connected components in the network.
+- `restriction_type::Symbol=:default`: Restriction type, choose from :default, :road_turn_restrictions or :none
 
 # Required Download Kwargs
 
@@ -142,6 +151,10 @@ Downloads OpenStreetMap network data and creates an `OSMGraph` object.
 - `:all_private`: All motorways, walkways and cycleways including private ways.
 - `:none`: No network filters.
 
+# Restriction Types
+- `:road_turn_restrictions` use if way type is 'highway', downloads turn restrictions on road network. Will not apply if network_type is :rail
+- `:none` Do not download turn restrictions.
+
 # Return
 - `OSMGraph`: Container for storing OpenStreetMap node, way, relation and graph related obejcts.
 """
@@ -154,20 +167,23 @@ function graph_from_download(download_method::Symbol;
                              graph_type::Symbol=:static,
                              precompute_dijkstra_states::Bool=false,
                              largest_connected_component::Bool=true,
+                             restriction_type::Symbol=:default,
                              download_kwargs...
                              )::OSMGraph
     obj = download_osm_network(download_method,
                                network_type=network_type,
                                metadata=metadata,
                                download_format=download_format,
-                               save_to_file_location=save_to_file_location;
+                               save_to_file_location=save_to_file_location,
+                               restriction_type=restriction_type;
                                download_kwargs...)
     return graph_from_object(obj,
                              network_type=network_type,
                              weight_type=weight_type,
                              graph_type=graph_type,
                              precompute_dijkstra_states=precompute_dijkstra_states,
-                             largest_connected_component=largest_connected_component)
+                             largest_connected_component=largest_connected_component,
+                             restriction_type=restriction_type)
 end
 
 

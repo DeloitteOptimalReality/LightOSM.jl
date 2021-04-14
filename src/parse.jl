@@ -96,6 +96,11 @@ Determine if way is of highway type given osm way tags dictionary.
 is_highway(tags::AbstractDict)::Bool = haskey(tags, "highway") ? true : false
 
 """
+Determine if way is of railway type given osm way tags dictionary.
+"""
+is_railway(tags::AbstractDict)::Bool = haskey(tags, "railway") ? true : false
+
+"""
 Determine if way matches the specified network type.
 """
 function matches_network_type(tags::AbstractDict, network_type::Symbol)::Bool
@@ -191,8 +196,13 @@ end
 
 """
 Parse OpenStreetMap data into `Node`, `Way` and `Restriction` objects.
+# TODO 
+- Implement proper handler for cleaning tags of railways, e.g. Tunnels, Bridges
+- Generalise relation handling - currently only does road turn restrictions  
 """
-function parse_osm_network_dict(osm_network_dict::AbstractDict, network_type::Symbol=:drive)::OSMGraph
+function parse_osm_network_dict(osm_network_dict::AbstractDict, 
+                                network_type::Union{Symbol,Dict{String, Array{String,1}}}=:drive,
+                                restriction_type::Symbol=:none)::OSMGraph
     U = DEFAULT_DATA_TYPES[:OSM_INDEX]
     T = DEFAULT_DATA_TYPES[:OSM_ID]
     W = DEFAULT_DATA_TYPES[:OSM_EDGE_WEIGHT]
@@ -205,6 +215,21 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict, network_type::Sy
             if is_highway(tags) && matches_network_type(tags, network_type)
                 tags["maxspeed"] = maxspeed(tags)
                 tags["lanes"] = lanes(tags)
+                tags["oneway"] = is_oneway(tags)
+                tags["reverseway"] = is_reverseway(tags)
+                nds = way["nodes"]
+                union!(highway_nodes, nds)
+                id = way["id"]
+                highways[id] = Way(id, nds, tags)
+            elseif is_railway(tags) && matches_network_type(tags, network_type)
+                tags["rail_type"] = haskey(tags,"railway") ? tags["railway"] : "unknown"
+                tags["electrified"] = haskey(tags,"electrified") ? tags["electrified"] : "unknown"
+                tags["gauge"] = haskey(tags,"gauge") ? tags["gauge"] : nothing
+                tags["usage"] = haskey(tags,"usage") ? tags["usage"] :  "unknown"
+                tags["name"] = haskey(tags,"name") ? tags["name"] : "unknown"
+                tags["lanes"] = haskey(tags,"tracks") ? tags["tracks"] : 1  # usually track are drawn seprately in OSM.
+                # Placeholder: These tags are not used for Rail, but required for graph construction. TODO how to handle
+                tags["maxspeed"] = maxspeed(tags)
                 tags["oneway"] = is_oneway(tags)
                 tags["reverseway"] = is_reverseway(tags)
                 nds = way["nodes"]
@@ -227,8 +252,8 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict, network_type::Sy
         end
     end
     
-    restrictions = Dict{T,Restriction{T}}()
-    if network_type != :walk && network_type != :bike
+    restrictions = Dict{T,Restriction{T}}() # Currently Hardcoded processing of relations for road turn restriction
+    if haskey(osm_network_dict, "relation")
         for relation in osm_network_dict["relation"]
             if haskey(relation, "tags") && haskey(relation, "members")
                 tags = relation["tags"]
@@ -314,15 +339,19 @@ end
 """
 Initialises the OSMGraph object from OpenStreetMap data downloaded in `:xml` or `:osm` format.
 """
-function init_graph_from_object(osm_xml_object::XMLDocument, network_type::Symbol=:drive)::OSMGraph
+function init_graph_from_object(osm_xml_object::XMLDocument, 
+                                network_type::Union{Symbol,Dict{String, Array{String,1}}}=:drive,
+                                restriction_type::Symbol=:none)::OSMGraph
     dict_to_parse = osm_dict_from_xml(osm_xml_object)
-    return parse_osm_network_dict(dict_to_parse, network_type)
+    return parse_osm_network_dict(dict_to_parse, network_type, restriction_type)
 end
 
 """
 Initialises the OSMGraph object from OpenStreetMap data downloaded in `:json` format.
 """
-function init_graph_from_object(osm_json_object::AbstractDict, network_type::Symbol=:drive)::OSMGraph
+function init_graph_from_object(osm_json_object::AbstractDict,
+                                network_type::Union{Symbol,Dict{String, Array{String,1}}}=:drive,
+                                restriction_type::Symbol=:none)::OSMGraph
     dict_to_parse = osm_dict_from_json(osm_json_object)
-    return parse_osm_network_dict(dict_to_parse, network_type)
+    return parse_osm_network_dict(dict_to_parse, network_type, restriction_type)
 end
