@@ -69,7 +69,7 @@ end
                    bbox::Union{Vector{AbstractFloat},Nothing}=nothing
                    )::String
 
-Forms an Overpass query string.
+Forms an Overpass query string. For a guide on the OSM query language, see https://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide.
 
 # Arguments
 - `filters::String`: Filters for the query, e.g. polygon filter, highways only, traffic lights only, etc.
@@ -88,7 +88,9 @@ function overpass_query(filters::String,
     download_format_str = """[out:$(OSM_DOWNLOAD_FORMAT[download_format])]"""
     bbox_str = bbox === nothing ? "" : """[bbox:$(replace("$bbox", r"[\[ \]]" =>  ""))]"""
     metadata_str = metadata ? "meta" : ""
-    return """$download_format_str[timeout:180]$bbox_str;($filters);out count;out $metadata_str;"""
+    query = """$download_format_str[timeout:180]$bbox_str;($filters);out count;out $metadata_str;"""
+    @debug """Making overpass query: $query"""
+    return query
 end
 
 """
@@ -102,7 +104,7 @@ Forms an Overpass query string using geojosn polygon coordinates as a filter.
 
 # Arguments
 - `geojson_polygons::Vector{Vector{Any}}`: Vector of `[lat, lon, ...]` polygon coordinates.
-- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`.
+- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, `:rail`.
 - `metadata::Bool=false`: Set true to return metadata.
 - `download_format::Symbol=:osm`: Download format, either `:osm`, `:xml` or `json`.
 
@@ -115,13 +117,16 @@ function overpass_polygon_network_query(geojson_polygons::AbstractVector{<:Abstr
                                         download_format::Symbol=:osm
                                         )::String
     way_filter = WAY_FILTERS_QUERY[network_type]
-    relation_filter = RELATION_FILTERS_QUERY[:restriction]
+    relation_filter = RELATION_FILTERS_QUERY[network_type]
 
     filters = ""
     for polygon in geojson_polygons
         polygon = map(x -> [x[2], x[1]], polygon) # switch lon-lat to lat-lon
         polygon_str = replace("$polygon", r"[\[,\]]" =>  "")
-        filters *= """way$way_filter(poly:"$polygon_str");>;rel$relation_filter(poly:"$polygon_str");>;"""
+        filters *= """way$way_filter(poly:"$polygon_str");>;"""
+        if !isnothing(relation_filter)
+            filters *= """rel$relation_filter(poly:"$polygon_str");>;"""
+        end
     end
 
     return overpass_query(filters, metadata, download_format)
@@ -166,7 +171,7 @@ Downloads an OpenStreetMap network using any place name string.
 
 # Arguments
 - `place_name::String`: Any place name string used as a search argument to the Nominatim API.
-- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`.
+- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, `:rail`.
 - `metadata::Bool=false`: Set true to return metadata.
 - `download_format::Symbol=:osm`: Download format, either `:osm`, `:xml` or `json`.
 
@@ -194,7 +199,7 @@ Downloads an OpenStreetMap network using a polygon.
 
 # Arguments
 - `polygon::AbstractVector`: Vector of longitude-latitude pairs.
-- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`.
+- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, `:rail`.
 - `metadata::Bool=false`: Set true to return metadata.
 - `download_format::Symbol=:osm`: Download format, either `:osm`, `:xml` or `json`.
 
@@ -207,7 +212,7 @@ function osm_network_from_polygon(;polygon::AbstractVector{<:AbstractVector{<:Re
                                   download_format::Symbol=:osm
                                   )::String
     query = overpass_polygon_network_query([polygon], network_type, metadata, download_format)
-return overpass_request(query)
+    return overpass_request(query)
 end
 
 """
@@ -221,7 +226,7 @@ Forms an Overpass query string using a bounding box as a filter.
 
 # Arguments
 - `bbox::Vector{AbstractFloat}`: Vector of bounding box coordinates `[minlat, minlon, maxlat, maxlon]`.
-- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`.
+- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, `:rail`.
 - `metadata::Bool=false`: Set true to return metadata.
 - `download_format::Symbol=:osm`: Download format, either `:osm`, `:xml` or `json`.
 
@@ -234,8 +239,11 @@ function overpass_bbox_network_query(bbox::Vector{<:AbstractFloat},
                                      download_format::Symbol=:osm
                                      )::String
     way_filter = WAY_FILTERS_QUERY[network_type]
-    relation_filter = RELATION_FILTERS_QUERY[:restriction]
-    filters = "way$way_filter;>;rel$relation_filter;>;"
+    relation_filter = RELATION_FILTERS_QUERY[network_type]
+    filters = "way$way_filter;>;"
+    if !isnothing(relation_filter)
+        filters *= """rel$relation_filter(poly:"$polygon_str");>;"""
+    end
     return overpass_query(filters, metadata, download_format, bbox)
 end
 
@@ -256,7 +264,7 @@ Downloads an OpenStreetMap network using bounding box coordinates.
 - `minlon::AbstractFloat`: Bottom left bounding box longitude coordinate.
 - `maxlat::AbstractFloat`: Top right bounding box latitude coordinate.
 - `maxlon::AbstractFloat`: Top right bounding box longitude coordinate.
-- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`.
+- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, `:rail`.
 - `metadata::Bool=false`: Set true to return metadata.
 - `download_format::Symbol=:osm`: Download format, either `:osm`, `:xml` or `json`.
 
@@ -288,7 +296,7 @@ Downloads an OpenStreetMap network using bounding box coordinates calculated fro
 # Arguments
 - `point::GeoLocation`: Centroid point to draw the bounding box around.
 - `radius::Number`: Distance (km) from centroid point to each bounding box corner.
-- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`.
+- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, `:rail`.
 - `metadata::Bool=false`: Set true to return metadata.
 - `download_format::Symbol=:osm`: Download format, either `:osm`, `:xml` or `json`.
 
@@ -335,12 +343,12 @@ Downloads an OpenStreetMap network by querying with a place name, bounding box, 
 
 # Arguments
 - `download_method::Symbol`: Download method, choose from `:place_name`, `:bounding_box` or `:point`.
-- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`.
+- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, `:rail`
 - `metadata::Bool=false`: Set true to return metadata.
 - `download_format::Symbol=:osm`: Download format, either `:osm`, `:xml` or `json`.
 - `save_to_file_location::Union{String,Nothing}=nothing`: Specify a file location to save downloaded data to disk.
 
-# Required Download Kwargs
+# Required kwargs each Download Method
 
 *`download_method=:place_name`*
 - `place_name::String`: Any place name string used as a search argument to the Nominatim API.
@@ -366,6 +374,7 @@ Downloads an OpenStreetMap network by querying with a place name, bounding box, 
 - `:all`: All motorways, walkways and cycleways excluding private ways.
 - `:all_private`: All motorways, walkways and cycleways including private ways.
 - `:none`: No network filters.
+- `:rail`: Railways excluding proposed and platform.
 
 # Return
 - `Union{XMLDocument,Dict{String,Any}}`: OpenStreetMap network data parsed as either XML or Dictionary object depending on the download method.
