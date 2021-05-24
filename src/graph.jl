@@ -105,7 +105,7 @@ end
 Downloads OpenStreetMap network data and creates an `OSMGraph` object.
 
 # Arguments
-- `download_method::Symbol`: Download method, choose from `:place_name`, `:bounding_box` or `:point`.
+- `download_method::Symbol`: Download method, choose from `:place_name`, `:bbox` or `:point`.
 - `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, `:rail`.
 - `metadata::Bool=false`: Set true to return metadata.
 - `download_format::Symbol=:osm`: Download format, either `:osm`, `:xml` or `json`.
@@ -115,12 +115,12 @@ Downloads OpenStreetMap network data and creates an `OSMGraph` object.
 - `precompute_dijkstra_states::Bool=false`: Set true to precompute dijkstra parent states for every source node in the graph, *NOTE* this may take a while and may not be possible for graphs with large amount of nodes due to memory limits.
 - `largest_connected_component::Bool=true`: Set true to keep only the largest connected components in the network.
 
-# Required kwargs each Download Method
+# Required Kwargs for each Download Method
 
 *`download_method=:place_name`*
 - `place_name::String`: Any place name string used as a search argument to the Nominatim API.
 
-*`download_method=:bounding_box`*
+*`download_method=:bbox`*
 - `minlat::AbstractFloat`: Bottom left bounding box latitude coordinate.
 - `minlon::AbstractFloat`: Bottom left bounding box longitude coordinate.
 - `maxlat::AbstractFloat`: Top right bounding box latitude coordinate.
