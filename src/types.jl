@@ -1,19 +1,29 @@
 """
 Representation of a geospatial coordinates.
 
-- `lat::AbstractFloat`: Latitude.
-- `lon::AbstractFloat`: Longitude.
-- `alt::AbstractFloat`: Altitude.
+- `lat::Float64`: Latitude.
+- `lon::Float64`: Longitude.
+- `alt::Float64`: Altitude.
 """
 @with_kw struct GeoLocation
-    lat::AbstractFloat
-    lon::AbstractFloat
-    alt::AbstractFloat = 0.0
+    lat::Float64
+    lon::Float64
+    alt::Float64 = 0.0
 end
 
 GeoLocation(lat::AbstractFloat, lon::AbstractFloat)::GeoLocation = GeoLocation(lat=lat, lon=lon)
 GeoLocation(point::Vector{<:AbstractFloat})::GeoLocation = GeoLocation(point...)
 GeoLocation(point_vector::Vector{<:Vector{<:AbstractFloat}})::Vector{GeoLocation} = [GeoLocation(p...) for p in point_vector]
+
+function Base.:(==)(loc1::GeoLocation, loc2::GeoLocation)
+    return loc1.lat == loc2.lat && loc1.lon == loc2.lon && loc1.alt == loc2.alt
+end
+function Base.hash(loc::GeoLocation, h::UInt)
+    for field in fieldnames(GeoLocation)
+		h = hash(getproperty(loc, field), h)
+	end
+    return h
+end
 
 """
 OpenStreetMap node.

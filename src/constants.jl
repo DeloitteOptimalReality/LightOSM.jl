@@ -1,7 +1,7 @@
 """
 Approximate radius of the Earth (km) used in geoemetry functions.
 """
-const RADIUS_OF_EARTH_KM = 6371
+const RADIUS_OF_EARTH_KM = 6371.0
 
 """
 Factor used to convert speed from mph to kph units.
