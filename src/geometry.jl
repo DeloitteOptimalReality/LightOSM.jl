@@ -18,6 +18,17 @@ function to_cartesian(loc::GeoLocation)
     x, y, z = to_cartesian(lat, lon, r)
     return x, y, z
 end
+function to_cartesian(locs::Vector{GeoLocation})
+    n_points = length(locs)
+    results = Matrix{Float64}(undef, 3, n_points)
+    @inbounds for i in 1:n_points
+        x, y, z = to_cartesian(locs[i])
+        results[1, i] = x
+        results[2, i] = y
+        results[3, i] = z
+    end
+    return results
+end
 
 """
     haversine(a_lat::T, a_lon::T, b_lat::T, b_lon::T) where {T}

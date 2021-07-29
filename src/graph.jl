@@ -438,6 +438,6 @@ Adds KDTree to `OSMGraph` for finding nearest neighbours.
 """
 function add_kdtree!(g::OSMGraph)
     node_locations = [node.location for (id, node) in g.nodes]  # node locations must have the same order as node indices
-    cartesian_locations = transpose(to_cartesian(node_locations))
+    cartesian_locations = to_cartesian(node_locations)
     g.kdtree = KDTree(cartesian_locations)
 end
