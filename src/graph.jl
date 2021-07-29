@@ -32,14 +32,14 @@ function graph_from_object(osm_data_object::Union{XMLDocument,Dict};
     add_weights!(g, weight_type)
     add_graph!(g, graph_type)
     # Finding connected components can only be done after LightGraph object has been constructed
-    largest_connected_component && trim_to_largest_connected_component!(g, weight_type, graph_type)
+    largest_connected_component && trim_to_largest_connected_component!(g, g.graph, weight_type, graph_type) # Pass in graph to make type stable
     add_node_tags!(g)
     !(network_type in [:bike, :walk]) && add_indexed_restrictions!(g)
 
     if precompute_dijkstra_states
         add_dijkstra_states!(g)
     else
-        U = DEFAULT_DATA_TYPES[:OSM_INDEX]
+        U = DEFAULT_OSM_INDEX_TYPE
         g.dijkstra_states = Vector{Vector{U}}(undef, length(g.nodes))
     end
 
@@ -177,11 +177,15 @@ Adds mappings between nodes, edges and highways to `OSMGraph`.
 """
 function add_node_and_edge_mappings!(g::OSMGraph{U,T,W}) where {U <: Integer,T <: Integer,W <: Real}
     for (way_id, way) in g.highways
-        for (i, node_id) in enumerate(way.nodes)
-            append!(g.node_to_highway[node_id], way_id)
+        @inbounds for (i, node_id) in enumerate(way.nodes)
+            if haskey(g.node_to_highway, node_id)
+                push!(g.node_to_highway[node_id], way_id)
+            else
+                g.node_to_highway[node_id] = [way_id]
+            end
 
             if i < length(way.nodes)
-                if !way.tags["reverseway"]
+                if !way.tags["reverseway"]::Bool
                     o = way.nodes[i] # origin
                     d = way.nodes[i + 1] # destination
                 else
@@ -191,14 +195,14 @@ function add_node_and_edge_mappings!(g::OSMGraph{U,T,W}) where {U <: Integer,T <
                 
                 g.edge_to_highway[[o, d]] = way_id
 
-                if !way.tags["oneway"]
+                if !way.tags["oneway"]::Bool
                     g.edge_to_highway[[d, o]] = way_id
                 end
             end                
         end
     end
 
-    @assert(length(g.nodes) == length(g.node_to_highway), "Data quality issue: number of graph nodes ($(length(g.nodes))) not equal to set of nodes extracted from highways ($(length(g.node_to_highway)))")
+    @assert(length(g.nodes) == length(g.node_to_highway), "Data quality issue: number of graph nodes ($(length(g.nodes::Dict{T,Node{T}}))) not equal to set of nodes extracted from highways ($(length(g.node_to_highway)))")
     g.node_to_index = OrderedDict{T,U}(n => i for (i, n) in enumerate(collect(keys(g.nodes))))
     g.index_to_node = OrderedDict{U,T}(i => n for (n, i) in g.node_to_index)
 end
@@ -207,15 +211,23 @@ end
 Adds maxspeed and lanes tags to every `OSMGraph` node.
 """
 function add_node_tags!(g::OSMGraph)
-    M = DEFAULT_DATA_TYPES[:OSM_MAXSPEED]
-    L = DEFAULT_DATA_TYPES[:OSM_LANES]
+    # Custom mean used to minimise allocations
+    @inline function _roundedmean(hwys, subkey, T)
+        total = zero(T)
+        for id in hwys
+            total += g.highways[id].tags[subkey]::T
+        end
+        return round(T, total/length(hwys))
+    end
+    
+    M = DEFAULT_OSM_MAXSPEED_TYPE
+    L = DEFAULT_OSM_LANES_TYPE
 
     for (id, data) in g.nodes
         highways = g.node_to_highway[id]
-        maxspeeds = [g.highways[w].tags["maxspeed"] for w in highways]
-        lanes = [g.highways[w].tags["lanes"] for w in highways]
-        g.nodes[id].tags["maxspeed"] = M(round(mean(maxspeeds)))
-        g.nodes[id].tags["lanes"] = L(round(mean(lanes)))
+        tags_dict = g.nodes[id].tags::Dict{String, Any}
+        tags_dict["maxspeed"] = _roundedmean(highways, "maxspeed", M)
+        tags_dict["lanes"] = _roundedmean(highways, "lanes", L)
         push!(g.node_coordinates, [data.location.lat, data.location.lon])
     end
 end
@@ -269,32 +281,29 @@ function add_indexed_restrictions!(g::OSMGraph{U,T,W}) where {U <: Integer,T <: 
                 continue
             end
 
-            from_node = adjacent_node(g, r.via_node, r.from_way)
+            from_node = adjacent_node(g, r.via_node, r.from_way)::T
             for to_way in restricted_to_ways
-                to_node = adjacent_node(g, r.via_node, to_way)
-
-                if to_node isa Integer
-                    to_node = [to_node]
-                end
+                to_node_temp = adjacent_node(g, r.via_node, to_way)
+                to_node = isa(to_node_temp, Integer) ? [to_node_temp] : to_node_temp
 
                 for tn in to_node
                     # only_straight_on restrictions may have multiple to_nodes
-                    indices = [g.node_to_index[n] for n in [tn, r.via_node, from_node]]
+                    indices = [g.node_to_index[n] for n in [tn, r.via_node::T, from_node]]
                     push!(g.indexed_restrictions[g.node_to_index[r.via_node]], MutableLinkedList{U}(indices...))
                 end
             end
 
         elseif r.type == "via_way"
-            via_way_nodes_list = [g.highways[w].nodes for w in r.via_way]
-            via_way_nodes = join_arrays_on_common_trailing_elements(via_way_nodes_list...)
+            via_way_nodes_list = [g.highways[w].nodes for w in r.via_way::Vector{T}]
+            via_way_nodes = join_arrays_on_common_trailing_elements(via_way_nodes_list...)::Vector{T}
 
             from_way_nodes = g.highways[r.from_way].nodes
             from_via_intersection_node = first_common_trailing_element(from_way_nodes, via_way_nodes)
-            from_node = adjacent_node(g, from_via_intersection_node, r.from_way)
+            from_node = adjacent_node(g, from_via_intersection_node, r.from_way)::T
 
             to_way_nodes = g.highways[r.to_way].nodes
             to_via_intersection_node = first_common_trailing_element(to_way_nodes, via_way_nodes)
-            to_node = adjacent_node(g, to_via_intersection_node, r.to_way)
+            to_node = adjacent_node(g, to_via_intersection_node, r.to_way)::T
 
             if to_via_intersection_node == via_way_nodes[end]
                 # Ordering matters, see doc string
@@ -315,18 +324,18 @@ function add_weights!(g::OSMGraph, weight_type::Symbol=:distance)
     o_locations = Vector{GeoLocation}() # edge origin node locations
     d_locations = Vector{GeoLocation}() # edge destination node locations
 
-    o_indices = Vector{Integer}() # edge origin node indices
-    d_indices = Vector{Integer}() # edge destination node indices
+    o_indices = Vector{Int}() # edge origin node indices
+    d_indices = Vector{Int}() # edge destination node indices
 
     if weight_type == :time || weight_type == :lane_efficiency
-        maxspeeds = Vector{Integer}() # km/h
+        maxspeeds = Vector{Int}() # km/h
     end
 
     if weight_type == :lane_efficiency
         lane_efficiency = Vector{Float64}()
     end
 
-    for edge in collect(keys(g.edge_to_highway))
+    @inbounds for edge in keys(g.edge_to_highway)
         o_loc = g.nodes[edge[1]].location
         d_loc = g.nodes[edge[2]].location
         push!(o_locations, o_loc)
@@ -339,18 +348,18 @@ function add_weights!(g::OSMGraph, weight_type::Symbol=:distance)
 
         if weight_type == :time || weight_type == :lane_efficiency
             highway = g.edge_to_highway[edge]
-            maxspeed = g.highways[highway].tags["maxspeed"]
+            maxspeed = g.highways[highway].tags["maxspeed"]::DEFAULT_OSM_MAXSPEED_TYPE
             push!(maxspeeds, maxspeed)
         end
 
         if weight_type == :lane_efficiency
-            lanes = g.highways[highway].tags["lanes"]
+            lanes = g.highways[highway].tags["lanes"]::DEFAULT_OSM_LANES_TYPE
             l_effiency = get(LANE_EFFICIENCY, lanes, 1)
             push!(lane_efficiency, l_effiency)
         end
     end
 
-    W = DEFAULT_DATA_TYPES[:OSM_EDGE_WEIGHT]
+    W = DEFAULT_OSM_EDGE_WEIGHT_TYPE
 
     if weight_type == :distance
         weights = max.(distance(o_locations, d_locations, :haversine), eps(W)) # km
@@ -388,8 +397,8 @@ end
 """
 Trims graph object to the largest connected component.
 """
-function trim_to_largest_connected_component!(g::OSMGraph, weight_type::Symbol=:time, graph_type::Symbol=:static)
-    cc = weakly_connected_components(g.graph)
+function trim_to_largest_connected_component!(g::OSMGraph{U, T, W}, graph, weight_type::Symbol=:time, graph_type::Symbol=:static) where {U, T, W}
+    cc = weakly_connected_components(graph)
     sort!(cc, by=x -> length(x), rev=true)
     indices_to_delete = flatten(cc[2:end])
     nodes_to_delete = [g.index_to_node[i] for i in indices_to_delete]
@@ -404,9 +413,9 @@ function trim_to_largest_connected_component!(g::OSMGraph, weight_type::Symbol=:
 
     for (id, r) in g.restrictions
         if r.via_node !== nothing
-            !isempty(intersect([r.via_node], nodes_to_delete)) && delete!(g.restrictions, id)
+            !isempty(intersect([r.via_node::T], nodes_to_delete)) && delete!(g.restrictions, id)
         elseif r.via_way !== nothing
-            ways = Set([r.from_way, r.to_way, r.via_way...])
+            ways = Set([r.from_way, r.to_way, r.via_way::Vector{T}...])
             !isempty(intersect(ways, highways_to_delete)) && delete!(g.restrictions, id)
         end
     end
@@ -415,6 +424,7 @@ function trim_to_largest_connected_component!(g::OSMGraph, weight_type::Symbol=:
     add_node_and_edge_mappings!(g)
     add_weights!(g, weight_type)
     add_graph!(g, graph_type)
+    return g
 end
 
 """

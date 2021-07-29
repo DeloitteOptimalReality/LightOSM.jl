@@ -190,19 +190,17 @@ const LANE_EFFICIENCY = Dict(
     1 => 0.7,
     2 => 0.8,
     3 => 0.9,
-    4 => 1
+    4 => 1.0
 )
 
 """
 Default data types used to construct OSMGraph object.
 """
-const DEFAULT_DATA_TYPES = Dict(
-    :OSM_ID => Int64, # default osm node/highway id date type
-    :OSM_INDEX => Int32, # default osm node index data type
-    :OSM_EDGE_WEIGHT => Float64, # default osm edge weight data type
-    :OSM_MAXSPEED => Int16, # default osm maxspeed data type
-    :OSM_LANES => Int8, # default osm lanes data type
-)
+const DEFAULT_OSM_ID_TYPE = Int64
+const DEFAULT_OSM_INDEX_TYPE = Int32
+const DEFAULT_OSM_EDGE_WEIGHT_TYPE = Float64
+const DEFAULT_OSM_MAXSPEED_TYPE = Int16
+const DEFAULT_OSM_LANES_TYPE = Int8
 
 """
 Default height of buildings in metres.

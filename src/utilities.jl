@@ -101,7 +101,7 @@ Parses a LightXML object to a dictionary.
 - `AbstractDict`: XML parsed as a dictionary.
 """
 function xml_to_dict(root_node::Union{XMLNode,XMLElement}, attributes_to_exclude::Set=Set())::AbstractDict
-    result = Dict()
+    result = Dict{String, Any}()
 
     for a in attributes(root_node)
         if !(name(a) in attributes_to_exclude)
@@ -110,7 +110,7 @@ function xml_to_dict(root_node::Union{XMLNode,XMLElement}, attributes_to_exclude
     end
 
     if has_children(root_node)
-        for c in collect(child_elements(root_node))
+        for c in child_elements(root_node)
             key = name(c)
 
             if key in attributes_to_exclude
@@ -118,7 +118,7 @@ function xml_to_dict(root_node::Union{XMLNode,XMLElement}, attributes_to_exclude
             end
 
             if haskey(result, name(c))
-                push!(result[key], xml_to_dict(c, attributes_to_exclude))
+                push!(result[key]::Vector{Dict{String, Any}}, xml_to_dict(c, attributes_to_exclude))
             else
                 result[key] = [xml_to_dict(c, attributes_to_exclude)]
             end
@@ -161,7 +161,8 @@ end
 """
 Joins an array of arrays into a single array, on common trailing elements.
 """
-function join_arrays_on_common_trailing_elements(arrays::AbstractArray{T}...)::AbstractArray{T} where T <: Any
+function join_arrays_on_common_trailing_elements(arrays::AbstractVector{T}...)::AbstractVector{T} where T <: Any
+    # Can we make this type stable? IE for input of Vector{Vector{Int}} a return of Vector{Int} can be detected by @code_warntype
     current = arrays[1]
     others = setdiff(arrays, [current])
 

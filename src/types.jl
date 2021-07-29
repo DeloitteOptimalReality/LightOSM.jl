@@ -36,7 +36,7 @@ OpenStreetMap node.
 struct Node{T <: Integer}
     id::T
     location::GeoLocation
-    tags::Union{AbstractDict{String,Any},Nothing}
+    tags::Union{Dict{String,Any},Nothing}
 end
 
 """
@@ -50,7 +50,7 @@ OpenStreetMap way.
 struct Way{T <: Integer}
     id::T
     nodes::Vector{T}
-    tags::AbstractDict{String,Any}
+    tags::Dict{String,Any}
 end
 
 """
@@ -70,7 +70,7 @@ OpenStreetMap turn restriction (relation).
 @with_kw struct Restriction{T <: Integer}
     id::T
     type::String
-    tags::AbstractDict{String,Any}
+    tags::Dict{String,Any}
     from_way::T
     to_way::T
     via_node::Union{T,Nothing} = nothing
@@ -83,15 +83,15 @@ end
 Container for storing OpenStreetMap node, way, relation and graph related obejcts.
 
 `U <: Integer,T <: Integer,W <: Real`
-- `nodes::AbstractDict{T,Node{T}}`: Mapping of node ids to node objects.
+- `nodes::Dict{T,Node{T}}`: Mapping of node ids to node objects.
 - `node_coordinates::Vector{Vector{W}}`: Vector of node coordinates [[lat, lon]...], indexed by graph vertices.
-- `highways::AbstractDict{T,Way{T}}`: Mapping of way ids to way objects.
-- `node_to_index::AbstractDict{T,U}`: Mapping of node ids to graph vertices.
-- `index_to_node::AbstractDict{U,T}`: Mapping of graph vertices to node ids.
-- `node_to_highway::AbstractDict{T,Vector{T}}`: Mapping of node ids to vector of way ids.
-- `edge_to_highway::AbstractDict{Vector{T},T}`: Mapping of edges (adjacent node pairs) to way ids.
-- `restrictions::AbstractDict{T,Restriction{T}}`: Mapping of relation ids to restriction objects.
-- `indexed_restrictions::Union{AbstractDict{U,Vector{MutableLinkedList{U}}},Nothing}`: Mapping of via node ids to ordered sequences of restricted node ids.
+- `highways::Dict{T,Way{T}}`: Mapping of way ids to way objects.
+- `node_to_index::OrderedDict{T,U}`: Mapping of node ids to graph vertices.
+- `index_to_node::OrderedDict{U,T}`: Mapping of graph vertices to node ids.
+- `node_to_highway::Dict{T,Vector{T}}`: Mapping of node ids to vector of way ids.
+- `edge_to_highway::Dict{Vector{T},T}`: Mapping of edges (adjacent node pairs) to way ids.
+- `restrictions::Dict{T,Restriction{T}}`: Mapping of relation ids to restriction objects.
+- `indexed_restrictions::Union{DefaultDict{U,Vector{MutableLinkedList{U}}},Nothing}`: Mapping of via node ids to ordered sequences of restricted node ids.
 - `graph::Union{AbstractGraph,Nothing}`: Either DiGraph, StaticDiGraph, SimpleWeightedDiGraph or MetaDiGraph.
 - `weights::Union{SparseMatrixCSC{W,U},Nothing}`: Sparse adjacency matrix (weights between graph vertices), either `:distance` (km), `:time` (hours) or `:lane_efficiency` (time scaled by number of lanes).
 - `dijkstra_states::Vector{Vector{U}}`: Vector of dijkstra parent states indexed by source vertices, used to retrieve shortest path from source vertex to any other vertex.
@@ -104,10 +104,10 @@ Container for storing OpenStreetMap node, way, relation and graph related obejct
     highways::Dict{T,Way{T}} = Dict{T,Way{T}}()
     node_to_index::OrderedDict{T,U} = OrderedDict{T,U}()
     index_to_node::OrderedDict{U,T} = OrderedDict{U,T}()
-    node_to_highway::DefaultDict{T,Vector{T}} = DefaultDict{T,Vector{T}}(Vector{T})
+    node_to_highway::Dict{T,Vector{T}} = Dict{T,Vector{T}}()
     edge_to_highway::Dict{Vector{T},T} = Dict{Vector{T},T}()
     restrictions::Dict{T,Restriction{T}} = Dict{T,Restriction{T}}()
-    indexed_restrictions::Union{AbstractDict{U,Vector{MutableLinkedList{U}}},Nothing} = nothing
+    indexed_restrictions::Union{DefaultDict{U,Vector{MutableLinkedList{U}}},Nothing} = nothing
     graph::Union{AbstractGraph,Nothing} = nothing
     weights::Union{SparseMatrixCSC{W,U},Nothing} = nothing
     dijkstra_states::Union{Vector{Vector{U}},Nothing} = nothing

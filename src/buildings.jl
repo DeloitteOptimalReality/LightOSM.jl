@@ -193,7 +193,7 @@ function height(tags::Dict)::Number
 end
 
 function parse_osm_buildings_dict(osm_buildings_dict::AbstractDict)::Dict{Integer,Building}
-    T = DEFAULT_DATA_TYPES[:OSM_ID]
+    T = DEFAULT_OSM_ID_TYPE
     
     nodes = Dict{T,Node{T}}()
     for node in osm_buildings_dict["node"]

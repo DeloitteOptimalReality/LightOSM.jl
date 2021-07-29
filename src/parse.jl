@@ -1,9 +1,9 @@
 """
 Determine road maxspeeds given osm way tags dictionary.
 """
-function maxspeed(tags::AbstractDict)::Integer
+function maxspeed(tags::AbstractDict)::DEFAULT_OSM_MAXSPEED_TYPE
     maxspeed = get(tags, "maxspeed", "default")
-    U = DEFAULT_DATA_TYPES[:OSM_MAXSPEED]
+    U = DEFAULT_OSM_MAXSPEED_TYPE
 
     if maxspeed != "default"
         if maxspeed isa Integer
@@ -37,9 +37,9 @@ end
 """
 Determine number of lanes given osm way tags dictionary.
 """
-function lanes(tags::AbstractDict)::Integer
+function lanes(tags::AbstractDict)::DEFAULT_OSM_LANES_TYPE
     lanes = get(tags, "lanes", "default")
-    U = DEFAULT_DATA_TYPES[:OSM_LANES]
+    U = DEFAULT_OSM_LANES_TYPE
 
     if lanes != "default"
         if lanes isa Integer
@@ -125,7 +125,7 @@ Determine if a restriction is valid and has usable data.
 function is_valid_restriction(members::AbstractArray, highways::AbstractDict{T,Way{T}})::Bool where T <: Integer
     role_counts = DefaultDict(0)
     role_type_counts = DefaultDict(0)
-    ways_set = Set{Integer}()
+    ways_set = Set{Int}()
     ways_mapping = DefaultDict(Vector)
     via_node = nothing
 
@@ -198,12 +198,12 @@ end
 Parse OpenStreetMap data into `Node`, `Way` and `Restriction` objects.
 """
 function parse_osm_network_dict(osm_network_dict::AbstractDict, network_type::Symbol=:drive)::OSMGraph
-    U = DEFAULT_DATA_TYPES[:OSM_INDEX]
-    T = DEFAULT_DATA_TYPES[:OSM_ID]
-    W = DEFAULT_DATA_TYPES[:OSM_EDGE_WEIGHT]
+    U = DEFAULT_OSM_INDEX_TYPE
+    T = DEFAULT_OSM_ID_TYPE
+    W = DEFAULT_OSM_EDGE_WEIGHT_TYPE
     
     highways = Dict{T,Way{T}}()
-    highway_nodes = Set{Integer}([])
+    highway_nodes = Set{Int}([])
     for way in osm_network_dict["way"]
         if haskey(way, "tags") && haskey(way, "nodes")
             tags = way["tags"]
@@ -288,18 +288,18 @@ function parse_xml_dict_to_json_dict(dict::AbstractDict)::AbstractDict
     for (type, elements) in dict
         for (i, el) in enumerate(elements)
             !(el isa AbstractDict) && continue
-
-            if haskey(el, "tag")
-                dict[type][i]["tags"] = Dict{String,Any}(tag["k"] => tag["v"] for tag in el["tag"] if tag["k"] isa String)
+            sub_dict::Dict{String, Any} = el
+            if haskey(sub_dict, "tag")
+                dict[type][i]["tags"] = Dict{String,Any}(tag["k"] => tag["v"] for tag in sub_dict["tag"] if tag["k"] isa String)
                 delete!(dict[type][i], "tag")
             end
 
-            if haskey(el, "member")
+            if haskey(sub_dict, "member")
                 dict[type][i]["members"] = pop!(dict[type][i], "member") # rename
             end
 
-            if haskey(el, "nd")
-                dict[type][i]["nodes"] = [nd["ref"] for nd in el["nd"]]
+            if haskey(sub_dict, "nd")
+                dict[type][i]["nodes"] = [nd["ref"] for nd in sub_dict["nd"]]
                 delete!(dict[type][i], "nd")
             end
         end
