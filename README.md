@@ -2,7 +2,9 @@
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://deloittedigitalapac.github.io/LightOSM.jl/docs/)
 [![Tutorial](https://img.shields.io/badge/docs-tutorial-informational.svg)](https://deloittedigitalapac.github.io/LightOSM.jl/notebooks/tutorial)
-[![Build Status](https://github.com/JuliaTesting/TestReports.jl/workflows/CI/badge.svg?branch=master)](https://github.com/DeloitteDigitalAPAC/LightOSM.jl/actions?query=workflow%3ACI+branch%3Amaster)
+[![Build Status](https://github.com/DeloitteDigitalAPAC/LightOSM.jl/workflows/CI/badge.svg?branch=master)](https://github.com/DeloitteDigitalAPAC/LightOSM.jl/actions?query=workflow%3ACI+branch%3Amaster)
+[![Codecov](https://codecov.io/gh/DeloitteDigitalAPAC/LightOSM.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/DeloitteDigitalAPAC/LightOSM.jl)
+
 
 **[`LightOSM.jl`](https://github.com/DeloitteDigitalAPAC/LightOSM.jl)** is **[Julia](https://julialang.org/)** package for downloading and analysing geospatial data from **[OpenStreetMap](https://wiki.openstreetmap.org/wiki/Main_Page)** APIs (**[Nominatim](https://nominatim.openstreetmap.org/ui/search.html)** and **[Overpass](https://overpass-api.de)**), such as nodes, ways, relations and building polygons.
 
