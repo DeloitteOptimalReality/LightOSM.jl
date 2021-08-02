@@ -8,5 +8,6 @@ using Test
     @testset "Geometry" begin include("geometry.jl") end
     @testset "Download" begin include("download.jl") end
     @testset "Graph" begin include("graph.jl") end
+    @testset "Nearest Node" begin include("nearest_node.jl") end
 end
 
