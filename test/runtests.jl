@@ -14,6 +14,7 @@ function wait_for_overpass()
 end
 
 @testset "LightOSM Tests" begin
+    @testset "Constants" begin include("constants.jl") end
     @testset "Utilities" begin include("utilities.jl") end
     @testset "Geometry" begin include("geometry.jl") end
     @testset "Download" begin include("download.jl") end

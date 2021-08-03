@@ -114,7 +114,7 @@ function distance(A::Union{Vector{GeoLocation},GeoLocation,Vector{<:Node},Node,V
     elseif method == :euclidean
         return euclidean(A, B)
     else
-        throw(ErrorException("Distance method $method not implemented"))
+        throw(ArgumentError("Distance method $method not implemented"))
     end
 end
 
@@ -166,7 +166,7 @@ function heading(a::GeoLocation, b::GeoLocation, return_units::Symbol=:degrees)
     elseif return_units == :degrees
         return rad2deg(heading)
     else
-        throw(ErrorException("Incorrect input for argument `return_units`, choose either `:degrees` or `:radians`"))
+        throw(ArgumentError("Incorrect input for argument `return_units`, choose either `:degrees` or `:radians`"))
     end
 end
 heading(A::Vector{GeoLocation}, B::Vector{GeoLocation}, return_units::Symbol=:degrees) = heading.(A, B, return_units)
