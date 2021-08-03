@@ -25,6 +25,7 @@ node_b2 = Node(1,b2,nothing)
     @test isapprox(distance(a1, b1, :haversine), 92.64561837286445)
     @test all(isapprox.(distance(A, B, :euclidean), [92.6448020780204, 0.1282389369277561]))
     @test all(isapprox.(distance(A, B, :haversine), [92.64561837286445, 0.1282389369295829]))
+    @test_throws ArgumentError distance(a1, b1, :unknown_method)
 end
 
 @testset "Heading tests" begin
@@ -34,6 +35,15 @@ end
     # Note: heading function returns bearings in range of [-180, 180], to convert to [0, 360] scale we need to adjust by (θ + 360) % 360
     @test abs((heading(a, b, :degrees) + 360) % 360 - 299.32559505087795) < 0.01
     @test sum((abs.(heading(A, B, :degrees) .+ 360) .% 360 - [299.32559505087795, 226.07812206538435])) < 0.01
+
+    # Node methods
+    @test heading(A, B, :degrees) == heading([node_a1, node_a2], [node_b1, node_b2], :degrees)
+
+    # Radians
+    @test isapprox(heading(a, b, :radians), deg2rad(heading(a, b, :degrees)))
+
+    # Error handling
+    @test_throws ArgumentError heading(a, b, :unknown_units)
 end
 
 @testset "calculate_location tests" begin
@@ -49,4 +59,11 @@ end
     @test isapprox(end_a.alt, 0.0)
     ends = calculate_location([a, b], [heading_a, heading_b], [dist_a, dist_b])
     @test ends[1] == end_a
+
+    @test calculate_location(a, heading_a, 0.0) == a
+    
+    # Node methods
+    node_a = Node(1, a, Dict{String, Any}())
+    node_b = Node(1, b, Dict{String, Any}())
+    @test calculate_location([a, b], [heading_a, heading_b], [dist_a, dist_b]) == calculate_location([node_a, node_b], [heading_a, heading_b], [dist_a, dist_b])
 end
