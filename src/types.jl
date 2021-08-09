@@ -52,6 +52,7 @@ struct Way{T <: Integer}
     nodes::Vector{T}
     tags::Dict{String,Any}
 end
+Way(id::T, nodes, tags::Dict{String, Any}) where T <: Integer = Way(id, convert(Vector{T}, nodes), tags)
 
 """
 OpenStreetMap turn restriction (relation).
