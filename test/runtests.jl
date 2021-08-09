@@ -3,6 +3,16 @@ using LightOSM
 using LightXML
 using Test
 
+function wait_for_overpass()
+    count = 0
+    while !LightOSM.is_overpass_server_availabile()
+        count == 6 && error("Overpass server is not available for tests")
+        count += 1
+        @info "Waiting for overpass server..."
+        sleep(4 * count)
+    end
+end
+
 @testset "LightOSM Tests" begin
     @testset "Utilities" begin include("utilities.jl") end
     @testset "Geometry" begin include("geometry.jl") end

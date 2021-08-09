@@ -1,9 +1,18 @@
 """
+    is_overpass_server_availabile()
+
+Returns `true` if server is available, `false` if not.
+"""
+function is_overpass_server_availabile()
+    response = String(HTTP.get(OSM_URLS[:overpass_status]).body)
+    return occursin("slots available now", response)
+end
+
+"""
 Checks the availability of Overpass servers by sending a request to https://overpass-api.de/api/status.
 """
 function check_overpass_server_availability()
-    response = String(HTTP.get(OSM_URLS[:overpass_status]).body)
-    if occursin("slots available now", response)
+    if is_overpass_server_availabile()
         @info "Overpass server is available for download"
     else
         throw(ErrorException("Overpass server is NOT available for download, please wait and try again"))
