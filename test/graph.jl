@@ -1,3 +1,5 @@
+wait_for_overpass()
+
 data = download_osm_network(:point, radius=0.5,
                             point=GeoLocation(-37.8136, 144.9631),
                             network_type=:drive)

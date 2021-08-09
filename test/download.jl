@@ -9,6 +9,7 @@ end
 @testset "Download end to end formats" begin
     # JSON
     filename = "melbourne_1k.json"
+    wait_for_overpass()
     data = download_osm_network(:point,
                                 radius=0.5,
                                 point=GeoLocation(-37.8136, 144.9631),
@@ -18,9 +19,10 @@ end
     @test isfile(filename)
     g = graph_from_file(filename) # Check it doesn't error
     rm(filename)
-    
+
     # XML
     filename = "melbourne_1k.xml"
+    wait_for_overpass()
     data = download_osm_network(:point,
                                 radius=0.5,
                                 point=GeoLocation(-37.8136, 144.9631),
@@ -33,6 +35,7 @@ end
 
     # OSM
     filename = "melbourne_1k.osm"
+    wait_for_overpass()
     data = download_osm_network(:point,
                                 radius=0.5,
                                 point=GeoLocation(-37.8136, 144.9631),
