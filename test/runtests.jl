@@ -13,6 +13,19 @@ function wait_for_overpass()
     end
 end
 
+# OSM graph for all tests to use
+filename = "melbourne_1k.osm"
+wait_for_overpass()
+data = download_osm_network(:point,
+                            radius=0.5,
+                            point=GeoLocation(-37.8136, 144.9631),
+                            network_type=:drive,
+                            download_format=:osm,
+                            save_to_file_location=filename);
+@test isfile(filename)
+g_time = graph_from_file(filename) # Check it doesn't error
+g_distance = graph_from_object(data, weight_type=:distance) # replace by better tests in future
+
 @testset "LightOSM Tests" begin
     @testset "Constants" begin include("constants.jl") end
     @testset "Utilities" begin include("utilities.jl") end
@@ -21,3 +34,5 @@ end
     @testset "Nearest Node" begin include("nearest_node.jl") end
 end
 
+# Tidy up
+rm(filename)
