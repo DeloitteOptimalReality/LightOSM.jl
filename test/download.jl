@@ -44,5 +44,6 @@ end
                                 save_to_file_location=filename);
     @test isfile(filename)
     g = graph_from_file(filename) # Check it doesn't error
+    g_distance = graph_from_object(data, weight_type=:distance) # replace by better tests in future
     rm(filename)
 end
