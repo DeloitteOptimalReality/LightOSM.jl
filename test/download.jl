@@ -6,7 +6,7 @@
     @test_throws ArgumentError LightOSM.osm_network_downloader(:doesnt_exist)
 end
 
-@testset "Download end to end formats" begin
+@testset "JSON format" begin
     # JSON
     filename = "melbourne_1k.json"
     wait_for_overpass()
@@ -15,19 +15,6 @@ end
                                 point=GeoLocation(-37.8136, 144.9631),
                                 network_type=:drive,
                                 download_format=:json,
-                                save_to_file_location=filename);
-    @test isfile(filename)
-    g = graph_from_file(filename) # Check it doesn't error
-    rm(filename)
-
-    # XML
-    filename = "melbourne_1k.xml"
-    wait_for_overpass()
-    data = download_osm_network(:point,
-                                radius=0.5,
-                                point=GeoLocation(-37.8136, 144.9631),
-                                network_type=:drive,
-                                download_format=:xml,
                                 save_to_file_location=filename);
     @test isfile(filename)
     g = graph_from_file(filename) # Check it doesn't error
