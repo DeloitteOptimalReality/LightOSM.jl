@@ -20,17 +20,40 @@ function string_deserializer(format::Symbol)::Function
 end
 
 """
-    file_deserializer(format::Symbol)::Function
+    check_valid_filename(filename)
+
+Check that `filename` ends in ".json", ".osm" or ".xml",
+"""
+function check_valid_filename(filename)
+    split_name = split(filename, '.')
+    if !has_extension(filename) || !in(split_name[end], ("json", "osm", "xml"))
+        err_msg = "File $filename does not have an extension of .json, .osm or .xml"
+        throw(ArgumentError(err_msg))
+    end
+    return true
+end
+
+"""
+    get_extension(filename)
+
+Return extension of `filename`.
+"""
+get_extension(filename) = split(filename, '.')[end]
+
+"""
+    file_deserializer(file_path)::Function
 
 Retrieves file deserializer for downloaded OpenStreetMap data.
 
 # Arguments
-- `format::Symbol`: Format of OpenStreetMap darta `:xml`, `:osm` or `:json`.
+- `file_path`: File path of OSM data.
 
 # Return
 - `Function`: Either LightXML or JSON parser. 
 """
-function file_deserializer(format::Symbol)::Function
+function file_deserializer(file_path)::Function
+    check_valid_filename(file_path)
+    format = Symbol(get_extension(file_path))
     if format == :xml || format == :osm
         return LightXML.parse_file
     elseif format == :json
