@@ -69,15 +69,15 @@ end
     @test_throws ArgumentError LightOSM.check_valid_filename("map")
 
     # file_deserializer
-    touch("data.osm")
-    touch("data.xml")
-    touch("data.json")
-    touch("data.doc")
+    files = ["data.osm", "data.xml", "data.json", "data.doc"]
+    foreach(touch, files)
 
     @test LightOSM.file_deserializer("data.osm") == LightXML.parse_file
     @test LightOSM.file_deserializer("data.xml") == LightXML.parse_file
     @test LightOSM.file_deserializer("data.json") == JSON.parsefile
     @test_throws ArgumentError LightOSM.file_deserializer("data.doc")
+
+    foreach(rm, files) # tidy up
 end
 
 @testset "validate_save_location" begin
