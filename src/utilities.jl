@@ -20,6 +20,13 @@ function string_deserializer(format::Symbol)::Function
 end
 
 """
+    has_extension(filename)
+
+Returns `true` if `filename` has an extension.
+"""
+has_extension(filename) = length(split(filename, '.')) > 1
+
+"""
     check_valid_filename(filename)
 
 Check that `filename` ends in ".json", ".osm" or ".xml",
@@ -61,6 +68,33 @@ function file_deserializer(file_path)::Function
     else
         throw(ArgumentError("File deserializer for $format format does not exist"))
     end
+end
+
+"""
+    validate_save_location(save_to_file_location, download_format)
+
+Check the extension of `save_to_file_location` and do the following:
+
+- If it is a valid download format but not the download format used,
+then error.
+- If the extension matches `download_format`, return `save_to_file_location`
+- If there is a different extension, append correct extension and return. This
+allows users to have periods in their file names if they wanted to
+- If no extension, add the correct extension and return
+"""
+function validate_save_location(save_to_file_location, download_format)
+    valid_formats = ("osm", "xml", "json")
+    if has_extension(save_to_file_location)
+        extension = get_extension(save_to_file_location)
+        if extension == string(download_format)
+            # File extension matches download format, all good
+            return save_to_file_location
+        elseif extension in valid_formats
+            # File extension is a different download format, error
+            throw(ArgumentError("Extension of save location $save_to_file_location does not match download format $download_format"))
+        end
+    end
+    return save_to_file_location *= "." * string(download_format)
 end
 
 """

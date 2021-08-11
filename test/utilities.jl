@@ -79,3 +79,25 @@ end
     @test LightOSM.file_deserializer("data.json") == JSON.parsefile
     @test_throws ArgumentError LightOSM.file_deserializer("data.doc")
 end
+
+@testset "validate_save_location" begin
+    osmfilename = "folder/filename.osm"
+    @test LightOSM.validate_save_location(osmfilename, :osm) == osmfilename
+    @test_throws ArgumentError LightOSM.validate_save_location(osmfilename, :xml)
+    @test_throws ArgumentError LightOSM.validate_save_location(osmfilename, :json)
+
+    jsonfilename = "folder/filename.json"
+    @test LightOSM.validate_save_location(jsonfilename, :json) == jsonfilename
+    @test_throws ArgumentError LightOSM.validate_save_location(jsonfilename, :osm)
+    @test_throws ArgumentError LightOSM.validate_save_location(jsonfilename, :xml)
+
+    xmlfilename = "folder/filename.xml"
+    @test LightOSM.validate_save_location(xmlfilename, :xml) == xmlfilename
+    @test_throws ArgumentError LightOSM.validate_save_location(xmlfilename, :osm)
+    @test_throws ArgumentError LightOSM.validate_save_location(xmlfilename, :json)
+
+    noextension = "filename"
+    @test LightOSM.validate_save_location(noextension, :xml) == noextension * ".xml"
+    @test LightOSM.validate_save_location(noextension, :json) == noextension * ".json"
+    @test LightOSM.validate_save_location(noextension, :osm) == noextension * ".osm"
+end
