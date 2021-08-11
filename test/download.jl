@@ -18,5 +18,8 @@ end
                                 save_to_file_location=filename);
     @test isfile(filename)
     g = graph_from_file(filename) # Check it doesn't error
-    rm(filename)
+    try
+        rm(filename)
+    catch
+    end
 end
