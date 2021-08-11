@@ -156,16 +156,8 @@ function download_osm_buildings(download_method::Symbol;
     @info "Downloaded osm buildings data from $(["$k: $v" for (k, v) in download_kwargs]) in $download_format format"
 
     if !(save_to_file_location isa Nothing)
-        file_extension = "." * String(download_format)
-
-        if !occursin(file_extension, save_to_file_location)
-            save_to_file_location *= file_extension
-        end
-
-        open(save_to_file_location, "w") do io
-            write(io, data)
-        end
-
+        save_to_file_location = validate_save_location(save_to_file_location, download_format)
+        write(save_to_file_location, data)
         @info "Saved osm buildings data to disk: $save_to_file_location"
     end
 
