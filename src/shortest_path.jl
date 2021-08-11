@@ -139,7 +139,7 @@ Extract total edge weight along a path.
 - `sum::W`: Total path edge weight, distances are in km, time is in hours.
 """
 function total_path_weight(g::OSMGraph{U,T,W}, path::Vector{T})::W where {U <: Integer,T <: Integer,W <: Real}
-    sum::Float64 = 0.0
+    sum::W = zero(W)
     for i in 1:length(path) - 1
         sum += g.weights[g.node_to_index[path[i]], g.node_to_index[path[i + 1]]]
     end
