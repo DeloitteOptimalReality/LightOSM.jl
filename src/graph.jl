@@ -93,7 +93,7 @@ end
     graph_from_download(download_method::Symbol;
                         network_type::Symbol=:drive,
                         metadata::Bool=false,
-                        download_format::Symbol=:osm,
+                        download_format::Symbol=:json,
                         save_to_file_location::Union{String,Nothing}=nothing,
                         weight_type::Symbol=:time,
                         graph_type::Symbol=:static,
@@ -108,7 +108,7 @@ Downloads OpenStreetMap network data and creates an `OSMGraph` object.
 - `download_method::Symbol`: Download method, choose from `:place_name`, `:bbox` or `:point`.
 - `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, `:rail`.
 - `metadata::Bool=false`: Set true to return metadata.
-- `download_format::Symbol=:osm`: Download format, either `:osm`, `:xml` or `json`.
+- `download_format::Symbol=:json`: Download format, either `:osm`, `:xml` or `json`.
 - `save_to_file_location::Union{String,Nothing}=nothing`: Specify a file location to save downloaded data to disk.
 - `weight_type::Symbol=:time`: Weight type for graph edges, pick from `:distance` (km), `:time` (hours), `:lane_efficiency` (time scaled by number of lanes). 
 - `graph_type::Symbol=:static`: Type of `LightGraphs.AbstractGraph`, pick from `:static` (StaticDiGraph), `:light` (DiGraph), `:simple_weighted` (SimpleWeightedDiGraph), `:meta` (MetaDiGraph).
@@ -149,7 +149,7 @@ Downloads OpenStreetMap network data and creates an `OSMGraph` object.
 function graph_from_download(download_method::Symbol;
                              network_type::Symbol=:drive,
                              metadata::Bool=false,
-                             download_format::Symbol=:osm,
+                             download_format::Symbol=:json,
                              save_to_file_location::Union{String,Nothing}=nothing,
                              weight_type::Symbol=:time,
                              graph_type::Symbol=:static,
