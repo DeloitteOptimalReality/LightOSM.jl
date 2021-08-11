@@ -13,7 +13,7 @@ function overpass_polygon_buildings_query(geojson_polygons::Vector{Vector{Any}},
 end
 
 """
-    osm_network_from_place_name(;place_name::String,
+    osm_buildings_from_place_name(;place_name::String,
                                 metadata::Bool=false,
                                 download_format::Symbol=:osm
                                 )::String
@@ -38,7 +38,7 @@ function osm_buildings_from_place_name(;place_name::String,
 end
 
 """
-    osm_network_from_bbox(;minlat::AbstractFloat,
+    osm_buildings_from_bbox(;minlat::AbstractFloat,
                           minlon::AbstractFloat,
                           maxlat::AbstractFloat,
                           maxlon::AbstractFloat,
@@ -73,7 +73,7 @@ function osm_buildings_from_bbox(;minlat::Float64,
 end
 
 """
-    osm_network_from_point(;point::GeoLocation,
+    osm_buildings_from_point(;point::GeoLocation,
                            radius::Number,
                            metadata::Bool=false,
                            download_format::Symbol=:osm
