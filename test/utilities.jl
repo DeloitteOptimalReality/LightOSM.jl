@@ -3,10 +3,6 @@
     @test LightOSM.string_deserializer(:osm) == LightXML.parse_string
     @test LightOSM.string_deserializer(:json) == JSON.parse
     @test_throws ArgumentError LightOSM.string_deserializer(:other) 
-    @test LightOSM.file_deserializer(:xml) == LightXML.parse_file
-    @test LightOSM.file_deserializer(:osm) == LightXML.parse_file
-    @test LightOSM.file_deserializer(:json) == JSON.parsefile
-    @test_throws ArgumentError LightOSM.file_deserializer(:other)
 end
 
 @testset "string utils" begin
@@ -60,4 +56,26 @@ end
     # flatten
     @test LightOSM.flatten([1]) == [1]
     @test LightOSM.flatten([[1,2],[[3], [4]],1,2]) == [1,2,3,4,1,2]
+end
+
+@testset "file_deserializer" begin
+    # check_valid_filename
+    @test LightOSM.check_valid_filename("map.osm")
+    @test LightOSM.check_valid_filename("map.json")
+    @test LightOSM.check_valid_filename("map.xml")
+    @test_throws ArgumentError LightOSM.check_valid_filename("map.osm.doc")
+    @test_throws ArgumentError LightOSM.check_valid_filename("map.json.doc")
+    @test_throws ArgumentError LightOSM.check_valid_filename("map.xml.doc")
+    @test_throws ArgumentError LightOSM.check_valid_filename("map")
+
+    # file_deserializer
+    touch("data.osm")
+    touch("data.xml")
+    touch("data.json")
+    touch("data.doc")
+
+    @test LightOSM.file_deserializer("data.osm") == LightXML.parse_file
+    @test LightOSM.file_deserializer("data.xml") == LightXML.parse_file
+    @test LightOSM.file_deserializer("data.json") == JSON.parsefile
+    @test_throws ArgumentError LightOSM.file_deserializer("data.doc")
 end

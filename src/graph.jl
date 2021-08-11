@@ -77,9 +77,9 @@ function graph_from_file(file_path::String;
                          precompute_dijkstra_states::Bool=false,
                          largest_connected_component::Bool=true
                          )::OSMGraph
-    !isfile(file_path) && throw(ErrorException("Graph file $file_path does not exist"))
-    extension = split(file_path, '.')[end]
-    deserializer = file_deserializer(Symbol(extension))
+
+    !isfile(file_path) && throw(ArgumentError("File $file_path does not exist"))
+    deserializer = file_deserializer(file_path)
     obj = deserializer(file_path)
     return graph_from_object(obj,
                              network_type=network_type,

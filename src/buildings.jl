@@ -296,9 +296,8 @@ Creates `Building` objects from OpenStreetMap data file (either `:osm`, `:xml` o
 - `Dict{Integer,Building}`: Mapping from building relation/way ids to `Building` objects.
 """
 function buildings_from_file(file_path::String)::Dict{Integer,Building}
-    !isfile(file_path) && throw(ErrorException("Buildings file $file_path does not exist"))
-    extension = split(file_path, '.')[end]
-    deserializer = file_deserializer(Symbol(extension))
+    !isfile(file_path) && throw(ArgumentError("File $file_path does not exist"))
+    deserializer = file_deserializer(file_path)
     obj = deserializer(file_path)
     return buildings_from_object(obj)
 end
