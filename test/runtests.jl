@@ -32,6 +32,7 @@ g_distance = graph_from_object(data, weight_type=:distance) # replace by better 
     @testset "Geometry" begin include("geometry.jl") end
     @testset "Download" begin include("download.jl") end
     @testset "Nearest Node" begin include("nearest_node.jl") end
+    @testset "Shortest Path" begin include("shortest_path.jl") end
 end
 
 # Tidy up
