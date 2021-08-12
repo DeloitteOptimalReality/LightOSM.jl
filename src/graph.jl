@@ -316,62 +316,46 @@ function add_indexed_restrictions!(g::OSMGraph{U,T,W}) where {U <: Integer,T <: 
     end
 end
 
-
 """
 Adds edge weights to `OSMGraph`.
 """
 function add_weights!(g::OSMGraph, weight_type::Symbol=:distance)
-    o_locations = Vector{GeoLocation}() # edge origin node locations
-    d_locations = Vector{GeoLocation}() # edge destination node locations
-
-    o_indices = Vector{Int}() # edge origin node indices
-    d_indices = Vector{Int}() # edge destination node indices
-
-    if weight_type == :time || weight_type == :lane_efficiency
-        maxspeeds = Vector{Int}() # km/h
-    end
-
-    if weight_type == :lane_efficiency
-        lane_efficiency = Vector{Float64}()
-    end
-
-    @inbounds for edge in keys(g.edge_to_highway)
-        o_loc = g.nodes[edge[1]].location
-        d_loc = g.nodes[edge[2]].location
-        push!(o_locations, o_loc)
-        push!(d_locations, d_loc)
-
-        o_idx = g.node_to_index[edge[1]]
-        d_idx = g.node_to_index[edge[2]]
-        push!(o_indices, o_idx)
-        push!(d_indices, d_idx)
-
-        if weight_type == :time || weight_type == :lane_efficiency
-            highway = g.edge_to_highway[edge]
-            maxspeed = g.highways[highway].tags["maxspeed"]::DEFAULT_OSM_MAXSPEED_TYPE
-            push!(maxspeeds, maxspeed)
-        end
-
-        if weight_type == :lane_efficiency
-            lanes = g.highways[highway].tags["lanes"]::DEFAULT_OSM_LANES_TYPE
-            l_effiency = get(LANE_EFFICIENCY, lanes, 1)
-            push!(lane_efficiency, l_effiency)
-        end
-    end
+    n_edges = length(g.edge_to_highway)
+    o_indices = Vector{Int}(undef, n_edges) # edge origin node indices
+    d_indices = Vector{Int}(undef, n_edges) # edge destination node indices
+    weights = Vector{Float64}(undef, n_edges)
 
     W = DEFAULT_OSM_EDGE_WEIGHT_TYPE
 
-    if weight_type == :distance
-        weights = max.(distance(o_locations, d_locations, :haversine), eps(W)) # km
-    elseif weight_type == :time
-        weights = max.(distance(o_locations, d_locations, :haversine) ./ maxspeeds, eps(W))
-    elseif weight_type == :lane_efficiency
-        weights = max.(distance(o_locations, d_locations, :haversine) ./ (maxspeeds .* lane_efficiency), eps(W))
+    @inbounds for (i, edge) in enumerate(keys(g.edge_to_highway))
+        o_loc = g.nodes[edge[1]].location
+        d_loc = g.nodes[edge[2]].location
+
+        o_indices[i] = g.node_to_index[edge[1]]
+        d_indices[i] = g.node_to_index[edge[2]]
+
+        dist = distance(o_loc, d_loc, :haversine)
+        if weight_type == :time || weight_type == :lane_efficiency
+            highway = g.edge_to_highway[edge]
+            maxspeed = g.highways[highway].tags["maxspeed"]::DEFAULT_OSM_MAXSPEED_TYPE
+            if weight_type == :time
+                weight = dist / maxspeed
+            else
+                lanes = g.highways[highway].tags["lanes"]::DEFAULT_OSM_LANES_TYPE
+                lane_efficiency = get(LANE_EFFICIENCY, lanes, 1.0)
+                weight = dist / (maxspeed * lane_efficiency)
+            end
+        else
+            # Distance
+            weight = dist
+        end
+        weights[i] = max(weight, eps(W))
     end
 
     n = length(g.nodes)
     g.weights = sparse(o_indices, d_indices, weights, n, n)
     g.weight_type = weight_type
+    return g
 end
 
 """
