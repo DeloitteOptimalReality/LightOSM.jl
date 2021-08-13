@@ -11,7 +11,7 @@ path_from_nodes = shortest_path(g_distance, g_distance.nodes[node1_id], g_distan
 @test path_from_nodes == path
 
 # Pass in weights directly
-path_with_weights = shortest_path(g_distance, g_distance.nodes[node1_id], g_distance.nodes[node2_id], g_distance.weights)
+path_with_weights = shortest_path(g_distance, g_distance.nodes[node1_id], g_distance.nodes[node2_id]; weights=g_distance.weights)
 @test path_with_weights == path
 
 # Also test astar doesn't error

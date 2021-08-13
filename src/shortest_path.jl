@@ -1,8 +1,9 @@
 """
     shortest_path(g::OSMGraph,
                   origin,
-                  destination:,
-                  [weights];
+                  destination;
+                  weights=g.weights,
+                  restrictions=g.indexed_restrictions,
                   algorithm::Symbol=:dijkstra,
                   save_dijkstra_state::Bool=false,
                   heuristic::Union{Function,Nothing}=nothing
@@ -14,20 +15,21 @@ Calculates the shortest path between two OpenStreetMap node ids.
 - `g::OSMGraph`: Graph container.
 - `origin`: Origin OpenStreetMap node or node id.
 - `destination`: Destination OpenStreetMap node or node id.
+- `weights`: Matrix of node to node edge weights, defaults to `g.weights`.
+- `restrictions `: Turn restictions dictionary. Pass in `nothing` to not use
+    restrictions, defaults to `g.indexed_restrictions`.
 - `algorithm::Symbol=:dijkstra`: Shortest path algorithm, either. `:dijkstra` or `:astar`.
 - `save_dijkstra_state::Bool=false`: Option to cache dijkstra parent states from a single source.
 - `heuristic::Union{Function,Nothing}=nothing`: Option to use custom astar heuristic, default haversine distance will be used if left blank.
-
-# Optional Arguments
-- `weights`: Matrix of node to node edge weights, defaults to `g.weights`.
 
 # Return
 - `Vector{U}`: Array of OpenStreetMap node ids making up the shortest path.
 """
 function shortest_path(g::OSMGraph,
                        origin::U,
-                       destination::U,
-                       weights=g.weights;
+                       destination::U;
+                       weights=g.weights,
+                       restrictions=g.indexed_restrictions,
                        algorithm::Symbol=:dijkstra,
                        save_dijkstra_state::Bool=false,
                        heuristic::Union{Function,Nothing}=nothing
@@ -42,15 +44,15 @@ function shortest_path(g::OSMGraph,
 
     elseif algorithm == :dijkstra
         if save_dijkstra_state
-            parents = dijkstra(g.graph, o_index, distmx=weights, restrictions=g.indexed_restrictions)
+            parents = dijkstra(g.graph, o_index, distmx=weights, restrictions=restrictions)
             g.dijkstra_states[o_index] = parents
         else
-            parents = dijkstra(g.graph, o_index; goal=d_index, distmx=weights, restrictions=g.indexed_restrictions)
+            parents = dijkstra(g.graph, o_index; goal=d_index, distmx=weights, restrictions=restrictions)
         end
 
     elseif algorithm == :astar
         h = heuristic === nothing ? default_heuristic(g) : heuristic
-        parents = astar(g.graph, o_index, goal=d_index, distmx=weights, heuristic=h, restrictions=g.indexed_restrictions)
+        parents = astar(g.graph, o_index, goal=d_index, distmx=weights, heuristic=h, restrictions=restrictions)
 
     else
         throw(ErrorException("No such algorthm $algorithm, pick from `:dijkstra` or `:astar`"))
@@ -63,10 +65,9 @@ end
 
 function shortest_path(g::OSMGraph,
                        origin::Node{U},
-                       destination::Node{U},
-                       args...;
+                       destination::Node{U};
                        kwargs...)::Vector{U} where {U <: Integer} 
-    return shortest_path(g, origin.id, destination.id, args...; kwargs...)
+    return shortest_path(g, origin.id, destination.id; kwargs...)
 end
 
 """
