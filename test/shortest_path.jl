@@ -1,3 +1,6 @@
+g_distance = basic_osm_graph_stub()
+g_time = basic_osm_graph_stub(:time)
+
 # Basic use
 edge = iterate(keys(g_distance.edge_to_highway))[1]
 node1_id = edge[1]
@@ -31,3 +34,9 @@ path_time_weights_astar = shortest_path(g_time, node1_id, node2_id, algorithm=:a
 
 edge_speed = g_distance.highways[g_distance.edge_to_highway[edge]].tags["maxspeed"]
 @test isapprox(total_path_weight(g_distance, path) / total_path_weight(g_time, path), edge_speed)
+
+# Test paths we know the result of from the stub graph
+path = shortest_path(g_time, 1001, 1004)
+@test path == [1001, 1006, 1007, 1004] # this highway is twice the speed so should be quicker
+path = shortest_path(g_distance, 1001, 1004)
+@test path == [1001, 1002, 1003, 1004]
