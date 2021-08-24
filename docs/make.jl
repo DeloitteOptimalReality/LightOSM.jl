@@ -15,11 +15,13 @@ makedocs(
             "download_buildings.md",
             "create_buildings.md",
             "geolocation.md"
-            ]
+        ],
+        "Unit Test Use" => "testing_use.md",
     ]
 )
 
 deploydocs(
     repo="github.com/DeloitteDigitalAPAC/LightOSM.jl.git",
-    devurl="docs"
+    devurl="docs",
+    push_preview=true,
 )

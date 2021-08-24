@@ -132,7 +132,6 @@ Depending on the `return_units` chosen, the return angle is in range of [-π, π
 or [-180, 180] if `:degrees`. Additionally, adjusts destination longitude in case the straight
 line path between a and b crosses the International Date Line.
 """
-
 function heading(a::GeoLocation, b::GeoLocation, return_units::Symbol=:degrees)
     a_lat = a.lat
     a_lon = a.lon

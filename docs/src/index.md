@@ -35,6 +35,12 @@ Another honourable mention goes to an existing Julia package **[OpenStreetMapX.j
 
 A comprehensive tutorial can be found found **[here](https://deloittedigitalapac.github.io/LightOSM.jl/notebooks/tutorial)**.
 
+## Using `OSMGraph`s in Unit Tests
+
+```@contents
+Pages = ["testing_use.md"]
+```
+
 ## Benchmarks
 
 Benchmark comparison for shortest path algorithms can be found **[here](https://deloittedigitalapac.github.io/LightOSM.jl/notebooks/benchmarks)**.
