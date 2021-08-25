@@ -112,37 +112,40 @@ function path_from_parents(parents::Vector{U}, origin::V, destination::V)::Vecto
 end
 
 """
-    weights_from_path(g::OSMGraph{U,T,W}, path::Vector{T})::Vector{W} where {U <: Integer,T <: Integer,W <: Real}
+    weights_from_path(g::OSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::Vector{W} where {U <: Integer,T <: Integer,W <: Real}
 
-Extracts edge weights from a path using `g.weights`.
+Extracts edge weights from a path using the weight matrix stored in `g.weights` unless
+a different matrix is passed to the `weights` kwarg.
 
 # Arguments
 - `g::OSMGraph`: Graph container.
 - `path::Vector{T}`: Array of OpenStreetMap node ids.
+- `weights=g.weights`: the matrix that the edge weights are extracted from. Defaults to `g.weights`.
 
 # Return
 - `Vector{W}`: Array of edge weights, distances are in km, time is in hours.
 """
-function weights_from_path(g::OSMGraph{U,T,W}, path::Vector{T})::Vector{W} where {U <: Integer,T <: Integer,W <: Real}
-    return [g.weights[g.node_to_index[path[i]], g.node_to_index[path[i + 1]]] for i in 1:length(path) - 1]
+function weights_from_path(g::OSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::Vector{W} where {U <: Integer,T <: Integer,W <: Real}
+    return [weights[g.node_to_index[path[i]], g.node_to_index[path[i + 1]]] for i in 1:length(path) - 1]
 end
 
 """
-    total_path_weight(g::OSMGraph{U,T,W}, path::Vector{T})::W where {U <: Integer,T <: Integer,W <: Real}
+    total_path_weight(g::OSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::W where {U <: Integer,T <: Integer,W <: Real}
 
 Extract total edge weight along a path.
 
 # Arguments
 - `g::OSMGraph`: Graph container.
 - `path::Vector{T}`: Array of OpenStreetMap node ids.
+- `weights=g.weights`: the matrix that the edge weights are extracted from. Defaults to `g.weights`.
 
 # Return
 - `sum::W`: Total path edge weight, distances are in km, time is in hours.
 """
-function total_path_weight(g::OSMGraph{U,T,W}, path::Vector{T})::W where {U <: Integer,T <: Integer,W <: Real}
+function total_path_weight(g::OSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::W where {U <: Integer,T <: Integer,W <: Real}
     sum::W = zero(W)
     for i in 1:length(path) - 1
-        sum += g.weights[g.node_to_index[path[i]], g.node_to_index[path[i + 1]]]
+        sum += weights[g.node_to_index[path[i]], g.node_to_index[path[i + 1]]]
     end
     return sum
 end

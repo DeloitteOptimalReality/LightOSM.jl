@@ -24,6 +24,10 @@ path_astar = shortest_path(g_distance, node1_id, node2_id, algorithm=:astar)
 # Test edge weight sum equals the weight in g_distance.weights
 @test total_path_weight(g_distance, path) == g_distance.weights[g_distance.node_to_index[node1_id],g_distance.node_to_index[node2_id]]
 @test total_path_weight(g_distance, path) == sum(weights_from_path(g_distance, path))
+n_nodes = length(g_distance.nodes)
+ones_weights = ones(n_nodes, n_nodes)
+@test total_path_weight(g_distance, path, weights=ones_weights) == 1 * (length(path) - 1)
+@test all(weights_from_path(g_distance, path, weights=ones_weights) .== 1)
 
 # Test time weights
 path_time_weights = shortest_path(g_time, node1_id, node2_id)
