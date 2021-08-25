@@ -69,10 +69,11 @@ function astar(g::AbstractGraph{U},
                 H[v] = alt + heuristic(v, goal)
                 dists[v] = alt
                 parents[v] = u
-            end
-
-            if goal !== nothing && v == goal
-                return parents
+                if goal == v && goal == peek(H).first
+                    # If v is the goal (destination) and the goal is the first node in the
+                    # priotity queue, we have found the optimal path so return parents
+                    return parents
+                end
             end
         end
     end
