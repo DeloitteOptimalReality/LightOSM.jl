@@ -1,7 +1,7 @@
 # Using LightOSM in Unit Tests
 
 To avoid having to download graphs within unit tests, it is suggested that something
-similar to the `OSMGraph` stub used in LightOSM's own tests (see [`test/stub.jl`](https://github.com/DeloitteDigitalAPAC/LightOSM.jl/blob/mm/add-stub/test/stub.jl)) is
+similar to the `OSMGraph` stub used in LightOSM's own tests (see [`test/stub.jl`](https://github.com/DeloitteDigitalAPAC/LightOSM.jl/blob/master/test/stub.jl)) is
 used by your package. This allows you to have explicit control over the structure of
 the graph and therefore to have explicit tests.
 
