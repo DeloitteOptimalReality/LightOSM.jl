@@ -15,12 +15,16 @@ Calculates the shortest path between two OpenStreetMap node ids.
 - `g::OSMGraph`: Graph container.
 - `origin`: Origin OpenStreetMap node or node id.
 - `destination`: Destination OpenStreetMap node or node id.
-- `weights`: Matrix of node to node edge weights, defaults to `g.weights`.
+- `weights`: Matrix of node to node edge weights, defaults to `g.weights`. If a custom weights matrix
+    is being used with algorithm set to `:astar`, make sure that a correct heuristic is being used.
 - `restrictions `: Turn restictions dictionary. Pass in `nothing` to not use
     restrictions, defaults to `g.indexed_restrictions`.
 - `algorithm::Symbol=:dijkstra`: Shortest path algorithm, either. `:dijkstra` or `:astar`.
 - `save_dijkstra_state::Bool=false`: Option to cache dijkstra parent states from a single source.
-- `heuristic::Union{Function,Nothing}=nothing`: Option to use custom astar heuristic, default haversine distance will be used if left blank.
+- `heuristic::Union{Function,Nothing}=nothing`: Option to use custom astar heuristic. If `nothing`,
+    default haversine distance will be used if `g.weight_type` is `:distance`, otherwise an estimated
+    time will be used by dividing the harversine distance by the speed at this node (specified in the 
+    `maxspeed` tag).
 
 # Return
 - `Vector{U}`: Array of OpenStreetMap node ids making up the shortest path.
