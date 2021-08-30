@@ -44,3 +44,15 @@ path = shortest_path(g_time, 1001, 1004)
 @test path == [1001, 1006, 1007, 1004] # this highway is twice the speed so should be quicker
 path = shortest_path(g_distance, 1001, 1004)
 @test path == [1001, 1002, 1003, 1004]
+
+# Test restriction (and bug fixed in PR #42). Restriction in stub stops 1007 -> 1004 -> 1003 right turn
+path = shortest_path(g_distance, 1007, 1003, restrictions=nothing)
+@test path == [1007, 1004, 1003]
+path = shortest_path(g_distance, 1007, 1003) # using g.indexed_restrictions
+@test path == [1007, 1006, 1001, 1002, 1003]
+
+# Test bug fixed in PR #42
+g_temp = deepcopy(g_distance)
+g_temp.weights[g_temp.node_to_index[1004], g_temp.node_to_index[1003]] = 100
+path = shortest_path(g_temp, 1007, 1003, restrictions=nothing)
+@test path == [1007, 1006, 1001, 1002, 1003]
