@@ -4,6 +4,7 @@ authors = ["Jack Chan <jchan2@deloitte.com.au>"]
 version = "0.1.15"
 
 [deps]
+CombinedParsers = "5ae71ed2-6f8a-4ed1-b94f-e14e8158f19e"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
