@@ -306,8 +306,9 @@ function add_indexed_restrictions!(g::OSMGraph{U,T,W}) where {U <: Integer,T <: 
             to_node = adjacent_node(g, to_via_intersection_node, r.to_way)::T
 
             if to_via_intersection_node == via_way_nodes[end]
-                # Ordering matters, see doc string
-                reverse!(via_way_nodes)
+                # Ordering matters, see doc string, but 
+                # we don't want to reorder the array in the Way object
+                via_way_nodes = reverse(via_way_nodes)
             end
 
             indices = [g.node_to_index[n] for n in [to_node, via_way_nodes..., from_node]]
