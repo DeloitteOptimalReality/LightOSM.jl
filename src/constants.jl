@@ -162,8 +162,8 @@ const DEFAULT_LANES = Dict(
 Default oneway attribute based on highway type. 
 """
 const DEFAULT_ONEWAY = Dict(
-    "motorway" => true,
-    "trunk" => true,
+    "motorway" => false,
+    "trunk" => false,
     "primary" => false,
     "secondary" => false,
     "tertiary" => false,
