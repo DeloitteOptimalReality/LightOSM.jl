@@ -7,12 +7,12 @@
           heuristic::Function=h(u, v) =  0.0,
           )::Vector{U} where {T <: Real,U <: Integer,V <: Integer,W <: Integer}
 
-A* shortest path algorithm taken and adapted from `LightGraphs.jl`. This version improves runtime 
+A* shortest path algorithm taken and adapted from `Graphs.jl`. This version improves runtime 
 speed, memory usage, has a more flexible heruistic function, and accounts for OpenStreetMap 
 turn restrictions.
 
 # Arguments
-- `g::AbstractGraph{U}`: LightGraphs abstract graph object.
+- `g::AbstractGraph{U}`: Graphs abstract graph object.
 - `src::W`: Source vertex.
 - `goal::Union{W,Nothing}=nothing`: Optional target vertex as a break condition.
 - `distmx::AbstractMatrix{T}=weights(g)`: Optional weight matrix.
