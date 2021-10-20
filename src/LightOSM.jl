@@ -4,7 +4,7 @@ using Parameters
 using DataStructures: DefaultDict, OrderedDict, MutableLinkedList, PriorityQueue, dequeue!, dequeue_pair!
 using Statistics: mean
 using SparseArrays: SparseMatrixCSC, sparse
-using LightGraphs: AbstractGraph, DiGraph, nv, outneighbors, weakly_connected_components, vertices
+using Graphs: AbstractGraph, DiGraph, nv, outneighbors, weakly_connected_components, vertices
 using StaticGraphs: StaticDiGraph
 using SimpleWeightedGraphs: SimpleWeightedDiGraph
 using MetaGraphs: MetaDiGraph

@@ -13,7 +13,7 @@ Creates an `OSMGraph` object from download OpenStreetMap network data, use with 
 - `osm_data_object::Symbol`: OpenStreetMap network data parsed as either XML or Dictionary object depending on the download method.
 - `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, `:rail`, must match the network type used to download `osm_data_object`.
 - `weight_type::Symbol=:time`: Weight type for graph edges, pick from `:distance` (km), `:time` (hours), `:lane_efficiency` (time scaled by number of lanes). 
-- `graph_type::Symbol=:static`: Type of `LightGraphs.AbstractGraph`, pick from `:static` (StaticDiGraph), `:light` (DiGraph), `:simple_weighted` (SimpleWeightedDiGraph), `:meta` (MetaDiGraph).
+- `graph_type::Symbol=:static`: Type of `Graphs.AbstractGraph`, pick from `:static` (StaticDiGraph), `:light` (DiGraph), `:simple_weighted` (SimpleWeightedDiGraph), `:meta` (MetaDiGraph).
 - `precompute_dijkstra_states::Bool=false`: Set true to precompute dijkstra parent states for every source node in the graph, *NOTE* this may take a while and may not be possible for graphs with large amount of nodes due to memory limits.
 - `largest_connected_component::Bool=true`: Set true to keep only the largest connected components in the network.
 
@@ -63,7 +63,7 @@ Creates an `OSMGraph` object from a downloaded OpenStreetMap network data file, 
 - `file_path::String`: OpenStreetMap network data file location.
 - `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, `:rail`, must match the network type used to download `osm_data_object`.
 - `weight_type::Symbol=:time`: Weight type for graph edges, pick from `:distance` (km), `:time` (hours), `:lane_efficiency` (time scaled by number of lanes). 
-- `graph_type::Symbol=:static`: Type of `LightGraphs.AbstractGraph`, pick from `:static` (StaticDiGraph), `:light` (DiGraph), `:simple_weighted` (SimpleWeightedDiGraph), `:meta` (MetaDiGraph).
+- `graph_type::Symbol=:static`: Type of `Graphs.AbstractGraph`, pick from `:static` (StaticDiGraph), `:light` (DiGraph), `:simple_weighted` (SimpleWeightedDiGraph), `:meta` (MetaDiGraph).
 - `precompute_dijkstra_states::Bool=false`: Set true to precompute dijkstra parent states for every source node in the graph, *NOTE* this may take a while and may not be possible for graphs with large amount of nodes due to memory limits.
 - `largest_connected_component::Bool=true`: Set true to keep only the largest connected components in the network.
 
@@ -111,7 +111,7 @@ Downloads OpenStreetMap network data and creates an `OSMGraph` object.
 - `download_format::Symbol=:json`: Download format, either `:osm`, `:xml` or `json`.
 - `save_to_file_location::Union{String,Nothing}=nothing`: Specify a file location to save downloaded data to disk.
 - `weight_type::Symbol=:time`: Weight type for graph edges, pick from `:distance` (km), `:time` (hours), `:lane_efficiency` (time scaled by number of lanes). 
-- `graph_type::Symbol=:static`: Type of `LightGraphs.AbstractGraph`, pick from `:static` (StaticDiGraph), `:light` (DiGraph), `:simple_weighted` (SimpleWeightedDiGraph), `:meta` (MetaDiGraph).
+- `graph_type::Symbol=:static`: Type of `Graphs.AbstractGraph`, pick from `:static` (StaticDiGraph), `:light` (DiGraph), `:simple_weighted` (SimpleWeightedDiGraph), `:meta` (MetaDiGraph).
 - `precompute_dijkstra_states::Bool=false`: Set true to precompute dijkstra parent states for every source node in the graph, *NOTE* this may take a while and may not be possible for graphs with large amount of nodes due to memory limits.
 - `largest_connected_component::Bool=true`: Set true to keep only the largest connected components in the network.
 
@@ -360,7 +360,7 @@ function add_weights!(g::OSMGraph, weight_type::Symbol=:distance)
 end
 
 """
-Adds a LightGraphs.AbstractGraph object to `OSMGraph`.
+Adds a Graphs.AbstractGraph object to `OSMGraph`.
 """
 function add_graph!(g::OSMGraph, graph_type::Symbol=:static)
     if graph_type == :light

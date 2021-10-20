@@ -2,7 +2,7 @@ using Random
 using BenchmarkTools
 using LightOSM
 using OpenStreetMapX
-using LightGraphs
+using Graphs
 using DataStructures
 using JSON
 
@@ -59,7 +59,7 @@ function lg_shortest_path(g::LightOSM.OSMGraph, o_d_indices, algorithm)
     if algorithm == :astar
         for (o, d) in o_d_indices
             try
-                LightGraphs.a_star(g.graph, o, d, g.weights)
+                Graphs.a_star(g.graph, o, d, g.weights)
             catch
                 # Error exception will be thrown if path does not exist from origin to destination node
             end
@@ -67,8 +67,8 @@ function lg_shortest_path(g::LightOSM.OSMGraph, o_d_indices, algorithm)
     elseif algorithm == :dijkstra
         for (o, d) in o_d_indices
             try
-                state = LightGraphs.dijkstra_shortest_paths(g.graph, o, g.weights)
-                LightGraphs.enumerate_paths(state, d)
+                state = Graphs.dijkstra_shortest_paths(g.graph, o, g.weights)
+                Graphs.enumerate_paths(state, d)
             catch
                 # Error exception will be thrown if path does not exist from origin to destination node
             end
