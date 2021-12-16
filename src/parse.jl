@@ -122,7 +122,7 @@ is_restriction(tags::AbstractDict)::Bool = get(tags, "type", "") == "restriction
 """
 Determine if a restriction is valid and has usable data.
 """
-function is_valid_restriction(members::AbstractArray, highways::AbstractDict{T,Way{T}})::Bool where T <: Integer
+function is_valid_restriction(members::AbstractArray, ways::AbstractDict{T,Way{T}})::Bool where T <: Integer
     role_counts = DefaultDict(0)
     role_type_counts = DefaultDict(0)
     ways_set = Set{Int}()
@@ -135,7 +135,7 @@ function is_valid_restriction(members::AbstractArray, highways::AbstractDict{T,W
         role = member["role"]
 
         if type == "way"
-            if !haskey(highways, id) || id in ways_set
+            if !haskey(ways, id) || id in ways_set
                 # Cannot process missing and duplicate from/via/to ways
                 return false
             else
@@ -164,9 +164,9 @@ function is_valid_restriction(members::AbstractArray, highways::AbstractDict{T,W
     end
 
     to_way = ways_mapping["to"][1]
-    trailing_to_way_nodes = trailing_elements(highways[to_way].nodes)
+    trailing_to_way_nodes = trailing_elements(ways[to_way].nodes)
     from_way = ways_mapping["from"][1]
-    trailing_from_way_nodes = trailing_elements(highways[from_way].nodes)
+    trailing_from_way_nodes = trailing_elements(ways[from_way].nodes)
 
     if via_node isa Integer && (!(via_node in trailing_to_way_nodes) || !(via_node in trailing_from_way_nodes))
         # Via node must be a trailing node on to_way and from_way
@@ -177,7 +177,7 @@ function is_valid_restriction(members::AbstractArray, highways::AbstractDict{T,W
         try
             # Via way trailing nodes must intersect with all to_ways and from_ways
             via_ways = ways_mapping["via"]
-            via_way_nodes_list = [highways[w].nodes for w in via_ways]
+            via_way_nodes_list = [ways[w].nodes for w in via_ways]
             via_way_nodes = join_arrays_on_common_trailing_elements(via_way_nodes_list...)
             trailing_via_way_nodes = trailing_elements(via_way_nodes)
         
@@ -202,7 +202,7 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict, network_type::Sy
     T = DEFAULT_OSM_ID_TYPE
     W = DEFAULT_OSM_EDGE_WEIGHT_TYPE
     
-    highways = Dict{T,Way{T}}()
+    ways = Dict{T,Way{T}}()
     highway_nodes = Set{Int}([])
     for way in osm_network_dict["way"]
         if haskey(way, "tags") && haskey(way, "nodes")
@@ -215,7 +215,7 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict, network_type::Sy
                 nds = way["nodes"]
                 union!(highway_nodes, nds)
                 id = way["id"]
-                highways[id] = Way(id, nds, tags)
+                ways[id] = Way(id, nds, tags)
             elseif is_railway(tags) && matches_network_type(tags, network_type)
                 tags["rail_type"] = haskey(tags,"railway") ? tags["railway"] : "unknown"
                 tags["electrified"] = haskey(tags,"electrified") ? tags["electrified"] : "unknown"
@@ -229,7 +229,7 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict, network_type::Sy
                 nds = way["nodes"]
                 union!(highway_nodes, nds)
                 id = way["id"]
-                highways[id] = Way(id, nds, tags)
+                ways[id] = Way(id, nds, tags)
             end
         end
     end
@@ -253,7 +253,7 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict, network_type::Sy
                 tags = relation["tags"]
                 members = relation["members"]
 
-                if is_restriction(tags) && is_valid_restriction(members, highways)
+                if is_restriction(tags) && is_valid_restriction(members, ways)
                     restriction_kwargs = DefaultDict(Vector)
                     for member in members
                         key = "$(member["role"])_$(member["type"])"
@@ -277,7 +277,7 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict, network_type::Sy
             end
         end
     end
-    return OSMGraph{U,T,W}(nodes=nodes, highways=highways, restrictions=restrictions)
+    return OSMGraph{U,T,W}(nodes=nodes, ways=ways, restrictions=restrictions)
 end
 
 """

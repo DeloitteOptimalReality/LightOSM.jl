@@ -62,7 +62,7 @@ function basic_osm_graph_stub(weight_type=:distance, graph_type=:static)
     U = LightOSM.DEFAULT_OSM_INDEX_TYPE
     T = LightOSM.DEFAULT_OSM_ID_TYPE
     W = LightOSM.DEFAULT_OSM_EDGE_WEIGHT_TYPE
-    g = OSMGraph{U,T,W}(nodes=nodes, highways=ways, restrictions=restrictions)
+    g = OSMGraph{U,T,W}(nodes=nodes, ways=ways, restrictions=restrictions)
     LightOSM.add_node_and_edge_mappings!(g)
     LightOSM.add_weights!(g, weight_type)
     LightOSM.add_graph!(g, graph_type)

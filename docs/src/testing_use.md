@@ -66,7 +66,7 @@ Creating the graph relies on some LightOSM internals to populate all other field
 U = LightOSM.DEFAULT_OSM_INDEX_TYPE
 T = LightOSM.DEFAULT_OSM_ID_TYPE
 W = LightOSM.DEFAULT_OSM_EDGE_WEIGHT_TYPE
-g = OSMGraph{U,T,W}(nodes=nodes, highways=ways)
+g = OSMGraph{U,T,W}(nodes=nodes, ways=ways)
 LightOSM.add_node_and_edge_mappings!(g)
 LightOSM.add_weights!(g, :distance) # or :time
 LightOSM.add_graph!(g, :static) # or any desired graph type
@@ -99,7 +99,7 @@ See [`Restriction`](@ref) for more information on `Restriction` objects.
 And then when instantiating the `OSMGraph`
 
 ```julia
-g = OSMGraph{U,T,W}(nodes=nodes, highways=ways, restrictions=restrictions)
+g = OSMGraph{U,T,W}(nodes=nodes, ways=ways, restrictions=restrictions)
 LightOSM.add_indexed_restrictions!(g)
 ```
 
