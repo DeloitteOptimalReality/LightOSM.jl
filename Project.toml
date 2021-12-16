@@ -1,7 +1,7 @@
 name = "LightOSM"
 uuid = "d1922b25-af4e-4ba3-84af-fe9bea896051"
 authors = ["Jack Chan <jchan2@deloitte.com.au>"]
-version = "0.1.19"
+version = "0.1.20"
 
 [deps]
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"

@@ -173,15 +173,15 @@ end
 
 
 """
-Adds mappings between nodes, edges and highways to `OSMGraph`.
+Adds mappings between nodes, edges and ways to `OSMGraph`.
 """
 function add_node_and_edge_mappings!(g::OSMGraph{U,T,W}) where {U <: Integer,T <: Integer,W <: Real}
-    for (way_id, way) in g.highways
+    for (way_id, way) in g.ways
         @inbounds for (i, node_id) in enumerate(way.nodes)
-            if haskey(g.node_to_highway, node_id)
-                push!(g.node_to_highway[node_id], way_id)
+            if haskey(g.node_to_way, node_id)
+                push!(g.node_to_way[node_id], way_id)
             else
-                g.node_to_highway[node_id] = [way_id]
+                g.node_to_way[node_id] = [way_id]
             end
 
             if i < length(way.nodes)
@@ -193,16 +193,16 @@ function add_node_and_edge_mappings!(g::OSMGraph{U,T,W}) where {U <: Integer,T <
                     d = way.nodes[i]
                 end
                 
-                g.edge_to_highway[[o, d]] = way_id
+                g.edge_to_way[[o, d]] = way_id
 
                 if !way.tags["oneway"]::Bool
-                    g.edge_to_highway[[d, o]] = way_id
+                    g.edge_to_way[[d, o]] = way_id
                 end
             end                
         end
     end
 
-    @assert(length(g.nodes) == length(g.node_to_highway), "Data quality issue: number of graph nodes ($(length(g.nodes::Dict{T,Node{T}}))) not equal to set of nodes extracted from highways ($(length(g.node_to_highway)))")
+    @assert(length(g.nodes) == length(g.node_to_way), "Data quality issue: number of graph nodes ($(length(g.nodes::Dict{T,Node{T}}))) not equal to set of nodes extracted from ways ($(length(g.node_to_way)))")
     g.node_to_index = OrderedDict{T,U}(n => i for (i, n) in enumerate(collect(keys(g.nodes))))
     g.index_to_node = OrderedDict{U,T}(i => n for (n, i) in g.node_to_index)
 end
@@ -215,7 +215,7 @@ function add_node_tags!(g::OSMGraph)
     @inline function _roundedmean(hwys, subkey, T)
         total = zero(T)
         for id in hwys
-            total += g.highways[id].tags[subkey]::T
+            total += g.ways[id].tags[subkey]::T
         end
         return round(T, total/length(hwys))
     end
@@ -224,10 +224,10 @@ function add_node_tags!(g::OSMGraph)
     L = DEFAULT_OSM_LANES_TYPE
 
     for (id, data) in g.nodes
-        highways = g.node_to_highway[id]
+        ways = g.node_to_way[id]
         tags_dict = g.nodes[id].tags::Dict{String, Any}
-        tags_dict["maxspeed"] = _roundedmean(highways, "maxspeed", M)
-        tags_dict["lanes"] = _roundedmean(highways, "lanes", L)
+        tags_dict["maxspeed"] = _roundedmean(ways, "maxspeed", M)
+        tags_dict["lanes"] = _roundedmean(ways, "lanes", L)
         push!(g.node_coordinates, [data.location.lat, data.location.lon])
     end
 end
@@ -236,15 +236,15 @@ end
 Finds the adjacent node id on a given way.
 """
 function adjacent_node(g::OSMGraph, node::T, way::T)::Union{T,Vector{<:T}} where T <: Integer
-    way_nodes = g.highways[way].nodes
+    way_nodes = g.ways[way].nodes
     if node == way_nodes[1]
         return way_nodes[2]
     elseif node == way_nodes[end]
         return way_nodes[length(way_nodes) - 1]
     else
         idx = findfirst(isequal(node), way_nodes)
-        is_oneway = g.highways[way].tags["oneway"]
-        is_reverseway = g.highways[way].tags["reverseway"]
+        is_oneway = g.ways[way].tags["oneway"]
+        is_reverseway = g.ways[way].tags["reverseway"]
         if is_oneway && !is_reverseway
             return way_nodes[idx + 1]
         elseif is_oneway && is_reverseway
@@ -274,7 +274,7 @@ function add_indexed_restrictions!(g::OSMGraph{U,T,W}) where {U <: Integer,T <: 
             elseif r.is_exclusive
                 # only_right_turn, only_left_turn, only_straight_on
                 # Multiple to_ways, e.g. if only_right_turn, then left turn and straight on are restricted
-                all_ways = g.node_to_highway[r.via_node]
+                all_ways = g.node_to_way[r.via_node]
                 permitted_to_way = r.to_way
                 restricted_to_ways = [w for w in all_ways if w != r.from_way && w != permitted_to_way]
             else
@@ -294,14 +294,14 @@ function add_indexed_restrictions!(g::OSMGraph{U,T,W}) where {U <: Integer,T <: 
             end
 
         elseif r.type == "via_way"
-            via_way_nodes_list = [g.highways[w].nodes for w in r.via_way::Vector{T}]
+            via_way_nodes_list = [g.ways[w].nodes for w in r.via_way::Vector{T}]
             via_way_nodes = join_arrays_on_common_trailing_elements(via_way_nodes_list...)::Vector{T}
 
-            from_way_nodes = g.highways[r.from_way].nodes
+            from_way_nodes = g.ways[r.from_way].nodes
             from_via_intersection_node = first_common_trailing_element(from_way_nodes, via_way_nodes)
             from_node = adjacent_node(g, from_via_intersection_node, r.from_way)::T
 
-            to_way_nodes = g.highways[r.to_way].nodes
+            to_way_nodes = g.ways[r.to_way].nodes
             to_via_intersection_node = first_common_trailing_element(to_way_nodes, via_way_nodes)
             to_node = adjacent_node(g, to_via_intersection_node, r.to_way)::T
 
@@ -321,14 +321,14 @@ end
 Adds edge weights to `OSMGraph`.
 """
 function add_weights!(g::OSMGraph, weight_type::Symbol=:distance)
-    n_edges = length(g.edge_to_highway)
+    n_edges = length(g.edge_to_way)
     o_indices = Vector{Int}(undef, n_edges) # edge origin node indices
     d_indices = Vector{Int}(undef, n_edges) # edge destination node indices
     weights = Vector{Float64}(undef, n_edges)
 
     W = DEFAULT_OSM_EDGE_WEIGHT_TYPE
 
-    @inbounds for (i, edge) in enumerate(keys(g.edge_to_highway))
+    @inbounds for (i, edge) in enumerate(keys(g.edge_to_way))
         o_loc = g.nodes[edge[1]].location
         d_loc = g.nodes[edge[2]].location
 
@@ -337,12 +337,12 @@ function add_weights!(g::OSMGraph, weight_type::Symbol=:distance)
 
         dist = distance(o_loc, d_loc, :haversine)
         if weight_type == :time || weight_type == :lane_efficiency
-            highway = g.edge_to_highway[edge]
-            maxspeed = g.highways[highway].tags["maxspeed"]::DEFAULT_OSM_MAXSPEED_TYPE
+            highway = g.edge_to_way[edge]
+            maxspeed = g.ways[highway].tags["maxspeed"]::DEFAULT_OSM_MAXSPEED_TYPE
             if weight_type == :time
                 weight = dist / maxspeed
             else
-                lanes = g.highways[highway].tags["lanes"]::DEFAULT_OSM_LANES_TYPE
+                lanes = g.ways[highway].tags["lanes"]::DEFAULT_OSM_LANES_TYPE
                 lane_efficiency = get(LANE_EFFICIENCY, lanes, 1.0)
                 weight = dist / (maxspeed * lane_efficiency)
             end
@@ -387,21 +387,21 @@ function trim_to_largest_connected_component!(g::OSMGraph{U, T, W}, graph, weigh
     sort!(cc, by=x -> length(x), rev=true)
     indices_to_delete = flatten(cc[2:end])
     nodes_to_delete = [g.index_to_node[i] for i in indices_to_delete]
-    highways_to_delete = Set(flatten([g.node_to_highway[n] for n in nodes_to_delete]))
+    ways_to_delete = Set(flatten([g.node_to_way[n] for n in nodes_to_delete]))
     
     delete_from_dict!(g.nodes, nodes_to_delete, :on_key)
     delete_from_dict!(g.node_to_index, nodes_to_delete, :on_key)
-    delete_from_dict!(g.node_to_highway, nodes_to_delete, :on_key)
+    delete_from_dict!(g.node_to_way, nodes_to_delete, :on_key)
     delete_from_dict!(g.index_to_node, indices_to_delete, :on_key)
-    delete_from_dict!(g.highways, highways_to_delete, :on_key)
-    delete_from_dict!(g.edge_to_highway, highways_to_delete, :on_value)
+    delete_from_dict!(g.ways, ways_to_delete, :on_key)
+    delete_from_dict!(g.edge_to_way, ways_to_delete, :on_value)
 
     for (id, r) in g.restrictions
         if r.via_node !== nothing
             !isempty(intersect([r.via_node::T], nodes_to_delete)) && delete!(g.restrictions, id)
         elseif r.via_way !== nothing
             ways = Set([r.from_way, r.to_way, r.via_way::Vector{T}...])
-            !isempty(intersect(ways, highways_to_delete)) && delete!(g.restrictions, id)
+            !isempty(intersect(ways, ways_to_delete)) && delete!(g.restrictions, id)
         end
     end
     

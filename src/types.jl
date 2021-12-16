@@ -86,11 +86,11 @@ Container for storing OpenStreetMap node, way, relation and graph related obejct
 `U <: Integer,T <: Integer,W <: Real`
 - `nodes::Dict{T,Node{T}}`: Mapping of node ids to node objects.
 - `node_coordinates::Vector{Vector{W}}`: Vector of node coordinates [[lat, lon]...], indexed by graph vertices.
-- `highways::Dict{T,Way{T}}`: Mapping of way ids to way objects.
+- `ways::Dict{T,Way{T}}`: Mapping of way ids to way objects. Previously called `highways`.
 - `node_to_index::OrderedDict{T,U}`: Mapping of node ids to graph vertices.
 - `index_to_node::OrderedDict{U,T}`: Mapping of graph vertices to node ids.
-- `node_to_highway::Dict{T,Vector{T}}`: Mapping of node ids to vector of way ids.
-- `edge_to_highway::Dict{Vector{T},T}`: Mapping of edges (adjacent node pairs) to way ids.
+- `node_to_way::Dict{T,Vector{T}}`: Mapping of node ids to vector of way ids. Previously called `node_to_highway`.
+- `edge_to_way::Dict{Vector{T},T}`: Mapping of edges (adjacent node pairs) to way ids. Previously called `edge_to_highway`.
 - `restrictions::Dict{T,Restriction{T}}`: Mapping of relation ids to restriction objects.
 - `indexed_restrictions::Union{DefaultDict{U,Vector{MutableLinkedList{U}}},Nothing}`: Mapping of via node ids to ordered sequences of restricted node ids.
 - `graph::Union{AbstractGraph,Nothing}`: Either DiGraph, StaticDiGraph, SimpleWeightedDiGraph or MetaDiGraph.
@@ -102,11 +102,11 @@ Container for storing OpenStreetMap node, way, relation and graph related obejct
 @with_kw mutable struct OSMGraph{U <: Integer,T <: Integer,W <: Real}
     nodes::Dict{T,Node{T}} = Dict{T,Node{T}}()
     node_coordinates::Vector{Vector{W}} = Vector{Vector{W}}() # needed for astar heuristic
-    highways::Dict{T,Way{T}} = Dict{T,Way{T}}()
+    ways::Dict{T,Way{T}} = Dict{T,Way{T}}()
     node_to_index::OrderedDict{T,U} = OrderedDict{T,U}()
     index_to_node::OrderedDict{U,T} = OrderedDict{U,T}()
-    node_to_highway::Dict{T,Vector{T}} = Dict{T,Vector{T}}()
-    edge_to_highway::Dict{Vector{T},T} = Dict{Vector{T},T}()
+    node_to_way::Dict{T,Vector{T}} = Dict{T,Vector{T}}()
+    edge_to_way::Dict{Vector{T},T} = Dict{Vector{T},T}()
     restrictions::Dict{T,Restriction{T}} = Dict{T,Restriction{T}}()
     indexed_restrictions::Union{DefaultDict{U,Vector{MutableLinkedList{U}}},Nothing} = nothing
     graph::Union{AbstractGraph,Nothing} = nothing
@@ -114,6 +114,19 @@ Container for storing OpenStreetMap node, way, relation and graph related obejct
     dijkstra_states::Union{Vector{Vector{U}},Nothing} = nothing
     kdtree::Union{KDTree,Nothing} = nothing
     weight_type::Union{Symbol,Nothing} = nothing
+end
+
+function Base.getproperty(g::OSMGraph, field::Symbol)
+    # Ensure renaming of "highways" to "ways" is backwards compatible
+    if field === :highways
+        return getfield(g, :ways)
+    elseif field === :node_to_highway
+        return getfield(g, :node_to_way)
+    elseif field === :edge_to_highway
+        return getfield(g, :edge_to_way)
+    else
+        return getfield(g, field)
+    end
 end
 
 """

@@ -13,4 +13,5 @@ include("stub.jl")
     @testset "Download" begin include("download.jl") end
     @testset "Nearest Node" begin include("nearest_node.jl") end
     @testset "Shortest Path" begin include("shortest_path.jl") end
+    @testset "Graph" begin include("graph.jl") end
 end
