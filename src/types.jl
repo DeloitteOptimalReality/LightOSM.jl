@@ -119,10 +119,13 @@ end
 function Base.getproperty(g::OSMGraph, field::Symbol)
     # Ensure renaming of "highways" to "ways" is backwards compatible
     if field === :highways
+        Base.depwarn("`highways` field is deprecated, use `ways` field instead", :getproperty)
         return getfield(g, :ways)
     elseif field === :node_to_highway
+        Base.depwarn("`node_to_highway` field is deprecated, use `node_to_way` field instead", :getproperty)
         return getfield(g, :node_to_way)
     elseif field === :edge_to_highway
+        Base.depwarn("`edge_to_highway` field is deprecated, use `edge_to_way` field instead", :getproperty)
         return getfield(g, :edge_to_way)
     else
         return getfield(g, field)
