@@ -45,6 +45,9 @@ function path_to_endpoint(g::AbstractGraph, (ep, ep_succ)::Tuple{T,T}) where {T<
     return path
 end
 
+function total_weight(g::OSMGraph, path::Vector{<:Integer})
+    sum((g.weights[path[[i, i+1]]...] for i in 1:length(path)-1))
+end
 """
 Build a new graph which simplifies the topology of osmg.graph.
 The resulting graph only contains intersections and dead ends from the original graph.
@@ -79,17 +82,17 @@ function simplify_graph(osmg::OSMGraph)
     for path in paths_to_reduce(g)
         u = index_mapping[first(path)]
         v = index_mapping[last(path)]
-        edge_weight = sum((osmg.weights[i, i+1] for i in 1:length(path)-1))
+        path_weight = total_weight(osmg, path)
         geo = createlinestring(osmg.node_coordinates[path])
 
         if add_edge!(G_simplified, (u, v))
             key = 0
-            weights[u, v] = edge_weight
+            weights[u, v] = path_weight
         else # parallel edge
             key = sum((edge_gdf.u .== u) .& (edge_gdf.v .== v))
-            weights[u, v] = min(edge_weight, weights[u, v])
+            weights[u, v] = min(path_weight, weights[u, v])
         end
-        push!(edge_gdf, (u, v, key, edge_weight, geo))
+        push!(edge_gdf, (u, v, key, path_weight, geo))
     end
 
     return G_simplified, weights, node_gdf, edge_gdf
