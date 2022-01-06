@@ -164,6 +164,17 @@ function Base.getproperty(g::OSMGraph, field::Symbol)
     else
         return getfield(g, field)
     end
+    
+struct SimplifiedOSMGraph{U <: Integer, T <: Union{Integer, String}, W <: Real}
+    parent::OSMGraph{U,T,W}
+    node_coordinates::Vector{Vector{W}} # needed for astar heuristic
+    node_to_index::OrderedDict{T,U}
+    index_to_node::OrderedDict{U,T}
+    edge_to_way::Dict{NTuple{3, U},Vector{T}}
+    graph::Union{AbstractGraph,Nothing}
+    edges::Dict{NTuple{3, U}, Vector{U}}
+    weights::Union{SparseMatrixCSC{W,U},Nothing}
+    dijkstra_states::Union{Vector{Vector{U}},Nothing}
 end
 
 """

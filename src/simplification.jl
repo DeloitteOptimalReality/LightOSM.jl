@@ -10,7 +10,7 @@ function is_endpoint(g::AbstractGraph, v)
         return true
     elseif outdegree(g, v) == 0 || indegree(g, v) == 0 # sink or source
         return true
-    elseif length(neighbors) != 2 || indegree(g, v) != outdegree(g, v) # change to one way
+    elseif length(neighbors) != 2 || indegree(g, v) != outdegree(g, v) # change to/from one way
         return true
     end
     return false
@@ -45,55 +45,78 @@ function path_to_endpoint(g::AbstractGraph, (ep, ep_succ)::Tuple{T,T}) where {T<
     return path
 end
 
+"""
+Return the total weight of a path given as a Vector of Ids.
+"""
 function total_weight(g::OSMGraph, path::Vector{<:Integer})
     sum((g.weights[path[[i, i+1]]...] for i in 1:length(path)-1))
 end
+
+function ways_in_path(g::OSMGraph, path::Vector{<:Integer})
+    ways = Set{Int}()
+    for i in 1:(length(path)-1)
+        edge = [g.index_to_node[path[i]], g.index_to_node[path[i+1]]]
+        push!(ways, g.edge_to_way[edge])
+    end
+    return collect(ways)
+end
+
 """
 Build a new graph which simplifies the topology of osmg.graph.
 The resulting graph only contains intersections and dead ends from the original graph.
 The geometry of the contracted nodes is kept in the edge_gdf DataFrame
 """
-function simplify_graph(osmg::OSMGraph)
+function simplify_graph(osmg::OSMGraph{U, T, W}) where {U, T, W}
     g = osmg.graph
     relevant_nodes = collect(endpoints(g))
-    n = length(relevant_nodes)
-    (n == nv(g)) && return g # nothing to simplify here
+    n_relevant = length(relevant_nodes)
+    graph = DiGraph(n_relevant) 
+    weights = similar(osmg.weights, (n_relevant, n_relevant))
+    node_coordinates = Vector{Vector{W}}(undef, n_relevant)
+    node_to_index = OrderedDict{T,U}()
+    index_to_node = OrderedDict{U,T}()
 
-
-    G_simplified = DiGraph(n) 
-    weights = similar(osmg.weights, (n, n))
-    edge_gdf = DataFrame(
-        u = Int[],
-        v = Int[],
-        key = Int[],
-        weight = Vector{eltype(osmg.weights)}(),
-        geom = IGeometry[],
-    )
-    node_gdf = DataFrame(id = Int[], geom = IGeometry[])
-
-
-    index_mapping = Dict{Int,Int}()
+    index_mapping = Dict{U,U}()
     for (new_i, old_i) in enumerate(relevant_nodes)
         index_mapping[old_i] = new_i
-        geo = createpoint(osmg.node_coordinates[old_i])
-        push!(node_gdf, (new_i, geo))
+        node_coordinates[new_i] = osmg.node_coordinates[old_i]
+        node = osmg.index_to_node[old_i]
+        index_to_node[new_i] = node
+        node_to_index[node] = new_i
     end
 
+    edges = Dict{NTuple{3,U}, Vector{U}}()
+    edge_count = Dict{Tuple{U,U}, Int}()
     for path in paths_to_reduce(g)
         u = index_mapping[first(path)]
         v = index_mapping[last(path)]
         path_weight = total_weight(osmg, path)
-        geo = createlinestring(osmg.node_coordinates[path])
-
-        if add_edge!(G_simplified, (u, v))
+        if add_edge!(graph, (u, v))
             key = 0
             weights[u, v] = path_weight
+            edge_count[u,v] = 1
         else # parallel edge
-            key = sum((edge_gdf.u .== u) .& (edge_gdf.v .== v))
+            key = edge_count[u,v]
+            edge_count[u,v] += 1
             weights[u, v] = min(path_weight, weights[u, v])
         end
-        push!(edge_gdf, (u, v, key, path_weight, geo))
+        edges[u,v,key] = path
     end
 
-    return G_simplified, weights, node_gdf, edge_gdf
+    edge_to_way = Dict{NTuple{3,U}, Vector{T}}()
+    for (edge, path) in edges
+        edge_to_way[edge] = ways_in_path(osmg, path)
+    end
+
+    return SimplifiedOSMGraph(
+                osmg,
+                node_coordinates,
+                node_to_index,
+                index_to_node,
+                edge_to_way,
+                graph,
+                edges,
+                weights,
+                nothing
+            )
 end
