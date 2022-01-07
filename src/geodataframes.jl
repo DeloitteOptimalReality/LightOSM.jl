@@ -1,11 +1,11 @@
-coordinates(node::Node) = node.location.lon, node.location.lat
+coordinates(node::Node) = [node.location.lon, node.location.lat]
 
 function node_gdf(g::OSMGraph)
     ids = collect(keys(g.nodes))
     geom = map(ids) do id
        coordinates(g.nodes[id])
     end
-    return DataFrame(;id=ids, geom=createpoint.(geom))
+    return DataFrame(;id=ids, geom=Point.(geom))
 end
 
 function highway_gdf(g::OSMGraph)
@@ -14,7 +14,7 @@ function highway_gdf(g::OSMGraph)
         coordinates(g.nodes[id])
     end
     geom = map(id -> _way_coordinates(g.highways[id]), ids)
-    return DataFrame(;id=ids, geom=createlinestring.(geom))
+    return DataFrame(;id=ids, geom=LineString.(geom))
 end
 
 function node_gdf(sg::SimplifiedOSMGraph)
@@ -22,7 +22,7 @@ function node_gdf(sg::SimplifiedOSMGraph)
     geom = map(ids) do id
         coordinates(sg.parent.nodes[id])
     end
-    return DataFrame(;id=ids, geom=createpoint.(geom))
+    return DataFrame(;id=ids, geom=Point.(geom))
 end
 
 highway_gdf(sg::SimplifiedOSMGraph) = highway_gdf(sg.parent)
@@ -34,5 +34,5 @@ function edge_gdf(sg::SimplifiedOSMGraph)
         reverse.(sg.parent.node_coordinates[path])
     end
     u, v, key = map(i -> getindex.(edge_ids, i), 1:3)
-    return DataFrame(;u, v, key, geom=createlinestring.(geom))
+    return DataFrame(;u, v, key, geom=LineString.(geom))
 end

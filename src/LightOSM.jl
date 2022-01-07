@@ -15,9 +15,8 @@ using JSON
 using LightXML
 using StaticArrays
 using SpatialIndexing
-using ArchGDAL: IGeometry, createlinestring, createpoint
 using DataFrames
-using ArchGDAL: createmultilinestring, createlinestring, createpoint, addgeom!
+using GeoInterface
 using RecipesBase
 
 export GeoLocation,
