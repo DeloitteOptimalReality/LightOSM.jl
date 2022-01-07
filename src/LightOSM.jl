@@ -17,9 +17,13 @@ using StaticArrays
 using SpatialIndexing
 using ArchGDAL: IGeometry, createlinestring, createpoint
 using DataFrames
+using ArchGDAL: createmultilinestring, createlinestring, createpoint, addgeom!
+using RecipesBase
 
 export GeoLocation,
+       AbstractOSMGraph,
        OSMGraph,
+       SimplifiedOSMGraph,
        Node,
        Way,
        EdgePoint,
@@ -70,7 +74,10 @@ export index_to_node_id,
        set_dijkstra_state_with_node_id!,
        maxspeed_from_index,
        maxspeed_from_node_id,
-       simplify_graph
+       simplify_graph,
+       node_gdf,
+       edge_gdf,
+       highway_gdf
 
 include("types.jl")
 include("constants.jl")
@@ -87,5 +94,7 @@ include("nearest_way.jl")
 include("buildings.jl")
 include("subgraph.jl")
 include("simplification.jl")
+include("geodataframes.jl")
+include("plotrecipes.jl")
 
 end # module
