@@ -21,7 +21,7 @@ function nearest_node(g::OSMGraph{U, T, W},
     cartesian_locations = LightOSM.to_cartesian(points)
     idxs, dists = knn(g.kdtree, cartesian_locations, n_neighbours, true)
     neighbours = [[g.index_to_node[j] for j in i] for i in idxs]
-    dists = [d for d in dists]
+    dists = collect(dists)
     return  neighbours, dists
 end
 
