@@ -99,7 +99,9 @@ Container for storing OpenStreetMap node, way, relation and graph related obejct
 - `kdtree::Union{KDTree,Nothing}`: KDTree used to calculate nearest nodes.
 - `weight_type::Union{Symbol,Nothing}`: Either `:distance`, `:time` or `:lane_efficiency`.
 """
-@with_kw mutable struct OSMGraph{U <: Integer,T <: Integer,W <: Real}
+
+abstract type AbstractOSMGraph end
+@with_kw mutable struct OSMGraph{U <: Integer,T <: Integer,W <: Real} <: AbstractOSMGraph
     nodes::Dict{T,Node{T}} = Dict{T,Node{T}}()
     node_coordinates::Vector{Vector{W}} = Vector{Vector{W}}() # needed for astar heuristic
     ways::Dict{T,Way{T}} = Dict{T,Way{T}}()
@@ -114,6 +116,18 @@ Container for storing OpenStreetMap node, way, relation and graph related obejct
     dijkstra_states::Union{Vector{Vector{U}},Nothing} = nothing
     kdtree::Union{KDTree,Nothing} = nothing
     weight_type::Union{Symbol,Nothing} = nothing
+end
+
+struct SimplifiedOSMGraph{U <: Integer,T <: Integer,W <: Real} <: AbstractOSMGraph
+    parent::OSMGraph{U,T,W}
+    node_coordinates::Vector{Vector{W}} # needed for astar heuristic
+    node_to_index::OrderedDict{T,U}
+    index_to_node::OrderedDict{U,T}
+    edge_to_way::Dict{NTuple{3,U},Vector{T}}
+    graph::Union{AbstractGraph,Nothing}
+    edges::Dict{NTuple{3, U}, Vector{U}}
+    weights::Union{SparseMatrixCSC{W,U},Nothing}
+    dijkstra_states::Union{Vector{Vector{U}},Nothing}
 end
 
 function Base.getproperty(g::OSMGraph, field::Symbol)
