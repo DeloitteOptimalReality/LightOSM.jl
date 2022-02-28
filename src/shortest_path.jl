@@ -7,7 +7,7 @@
                   algorithm::Symbol=:dijkstra,
                   save_dijkstra_state::Bool=false,
                   heuristic::Union{Function,Nothing}=nothing
-                  )::Vector{U} where {U <: Integer}
+                  ) where {U <: Integer}
 
 Calculates the shortest path between two OpenStreetMap node ids.
 
@@ -27,7 +27,8 @@ Calculates the shortest path between two OpenStreetMap node ids.
     `maxspeed` tag).
 
 # Return
-- `Vector{U}`: Array of OpenStreetMap node ids making up the shortest path.
+- `Union{Nothing, Vector{U}}`: Array of OpenStreetMap node ids making up the shortest path, or
+    `nothing` if no path exists.
 """
 function shortest_path(g::OSMGraph,
                        origin::U,
@@ -37,7 +38,7 @@ function shortest_path(g::OSMGraph,
                        algorithm::Symbol=:dijkstra,
                        save_dijkstra_state::Bool=false,
                        heuristic::Union{Function,Nothing}=nothing
-                       )::Vector{U} where {U <: Integer}
+                       ) where {U <: Integer}
     
     o_index = g.node_to_index[origin]
     d_index = g.node_to_index[destination]
@@ -62,6 +63,8 @@ function shortest_path(g::OSMGraph,
         throw(ErrorException("No such algorthm $algorithm, pick from `:dijkstra` or `:astar`"))
     end
     
+    parents[d_index] == 0  && return nothing
+
     path = path_from_parents(parents, o_index, d_index)
     
     return [g.index_to_node[i] for i in path]
@@ -70,7 +73,7 @@ end
 function shortest_path(g::OSMGraph,
                        origin::Node{U},
                        destination::Node{U};
-                       kwargs...)::Vector{U} where {U <: Integer} 
+                       kwargs...) where {U <: Integer} 
     return shortest_path(g, origin.id, destination.id; kwargs...)
 end
 
@@ -100,10 +103,6 @@ Extracts array of shortest path node ids from a single source dijkstra parent st
 - `Vector{U}`: Array of OpenStreetMap node ids making up the shortest path.
 """
 function path_from_parents(parents::Vector{U}, origin::V, destination::V)::Vector where {U <: Integer,V <: Integer}
-    if parents[destination] == 0
-        throw(ErrorException("Path does not exist between origin node index $origin and destination node index $destination")) 
-    end
-    
     src = destination
     path = []
     

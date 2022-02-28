@@ -56,3 +56,6 @@ g_temp = deepcopy(g_distance)
 g_temp.weights[g_temp.node_to_index[1004], g_temp.node_to_index[1003]] = 100
 path = shortest_path(g_temp, 1007, 1003, restrictions=nothing)
 @test path == [1007, 1006, 1001, 1002, 1003]
+
+# Test no path returns nothing
+@test isnothing(shortest_path(basic_osm_graph_stub(), 1007, 1008))
