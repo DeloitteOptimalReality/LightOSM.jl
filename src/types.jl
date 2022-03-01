@@ -112,7 +112,7 @@ Container for storing OpenStreetMap node, way, relation and graph related obejct
     graph::Union{AbstractGraph,Nothing} = nothing
     weights::Union{SparseMatrixCSC{W,U},Nothing} = nothing
     dijkstra_states::Union{Vector{Vector{U}},Nothing} = nothing
-    kdtree::Union{KDTree,Nothing} = nothing
+    kdtree::Union{KDTree{StaticArrays.SVector{3, W}, Euclidean, W}, Nothing} = nothing
     weight_type::Union{Symbol,Nothing} = nothing
 end
 
