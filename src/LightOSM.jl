@@ -9,10 +9,11 @@ using Graphs: AbstractGraph, DiGraph, nv, outneighbors, weakly_connected_compone
 using StaticGraphs: StaticDiGraph
 using SimpleWeightedGraphs: SimpleWeightedDiGraph
 using MetaGraphs: MetaDiGraph
-using NearestNeighbors: KDTree, knn
+using NearestNeighbors: Euclidean, KDTree, knn, nn
 using HTTP
 using JSON
 using LightXML
+using StaticArrays
 
 export GeoLocation,
        OSMGraph,
@@ -40,6 +41,7 @@ export GeoLocation,
        total_path_weight,
        path_from_parents,
        nearest_node,
+       nearest_nodes,
        download_osm_buildings,
        buildings_from_object,
        buildings_from_download,
