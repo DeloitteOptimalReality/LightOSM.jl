@@ -55,8 +55,8 @@ function graph_from_object(osm_data_object::Union{XMLDocument,Dict};
         g.dijkstra_states = Vector{Vector{U}}(undef, length(g.nodes))
     end
 
-    add_kdtree_and_rtree!(g)
-    @info "Created OSMGraph object with kwargs: network_type=$network_type, weight_type=$weight_type, graph_type=$graph_type, precompute_dijkstra_states=$precompute_dijkstra_states, largest_connected_component=$largest_connected_component"
+    add_kdtree!(g)
+    @info "Created OSMGraph object with kwargs: `network_type=$network_type`, `weight_type=$weight_type`, `graph_type=$graph_type`, `precompute_dijkstra_states=$precompute_dijkstra_states`, `largest_connected_component=$largest_connected_component`"
     return g
 end
 
