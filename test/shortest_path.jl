@@ -14,15 +14,15 @@ path_from_nodes = shortest_path(g_distance, g_distance.nodes[node1_id], g_distan
 @test path_from_nodes == path
 
 # Pass in weights directly
-path_with_weights = shortest_path(g_distance, g_distance.nodes[node1_id], g_distance.nodes[node2_id]; weights=g_distance.weights)
+path_with_weights = shortest_path(g_distance, g_distance.nodes[node1_id], g_distance.nodes[node2_id], g_distance.weights)
 @test path_with_weights == path
 
 # Also test astar doesn't error
-path_astar = shortest_path(g_distance, node1_id, node2_id, algorithm=:astar)
+path_astar = shortest_path(AStar, g_distance, node1_id, node2_id)
 @test path_astar==path
 
 # Test edge weight sum equals the weight in g_distance.weights
-@test total_path_weight(g_distance, path) == g_distance.weights[g_distance.node_to_index[node1_id],g_distance.node_to_index[node2_id]]
+@test total_path_weight(g_distance, path) == g_distance.weights[g_distance.node_to_index[node1_id], g_distance.node_to_index[node2_id]]
 @test total_path_weight(g_distance, path) == sum(weights_from_path(g_distance, path))
 n_nodes = length(g_distance.nodes)
 ones_weights = ones(n_nodes, n_nodes)
@@ -31,7 +31,7 @@ ones_weights = ones(n_nodes, n_nodes)
 
 # Test time weights
 path_time_weights = shortest_path(g_time, node1_id, node2_id)
-path_time_weights_astar = shortest_path(g_time, node1_id, node2_id, algorithm=:astar)
+path_time_weights_astar = shortest_path(AStar, g_time, node1_id, node2_id)
 @test path_time_weights[1] == node1_id
 @test path_time_weights[2] == node2_id
 @test path_time_weights == path_time_weights_astar
@@ -46,13 +46,17 @@ path = shortest_path(g_distance, 1001, 1004)
 @test path == [1001, 1002, 1003, 1004]
 
 # Test restriction (and bug fixed in PR #42). Restriction in stub stops 1007 -> 1004 -> 1003 right turn
-path = shortest_path(g_distance, 1007, 1003, restrictions=nothing)
+path = shortest_path(g_distance, 1007, 1003; cost_adjustment=(u, v, parents) -> 0.0)
 @test path == [1007, 1004, 1003]
-path = shortest_path(g_distance, 1007, 1003) # using g.indexed_restrictions
+path = shortest_path(g_distance, 1007, 1003; cost_adjustment=restriction_cost_adjustment(g_distance)) # using g.indexed_restrictions in cost_adjustment
 @test path == [1007, 1006, 1001, 1002, 1003]
 
 # Test bug fixed in PR #42
 g_temp = deepcopy(g_distance)
 g_temp.weights[g_temp.node_to_index[1004], g_temp.node_to_index[1003]] = 100
-path = shortest_path(g_temp, 1007, 1003, restrictions=nothing)
+path = shortest_path(g_temp, 1007, 1003; cost_adjustment=(u, v, parents) -> 0.0)
 @test path == [1007, 1006, 1001, 1002, 1003]
+
+
+# Test no path returns nothing
+@test isnothing(shortest_path(basic_osm_graph_stub(), 1007, 1008))

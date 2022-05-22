@@ -14,6 +14,7 @@ Pages = [
     "download_buildings.md",
     "create_buildings.md",
     "geolocation.md"
+    "graph_utilities.md"
 ]
 ```
 

@@ -161,3 +161,14 @@ struct Building{T <: Integer}
     polygons::Vector{Polygon{T}}
     tags::AbstractDict{String,Any}
 end
+
+"""
+PathAlgorithm.
+
+Abstract type for path finding algorithms, concrete types are:
+- `Dijkstra`
+- `AStar`
+"""
+abstract type PathAlgorithm end
+struct Dijkstra <: PathAlgorithm end
+struct AStar <: PathAlgorithm end

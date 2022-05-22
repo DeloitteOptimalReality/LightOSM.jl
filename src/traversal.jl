@@ -1,79 +1,154 @@
 """
     astar(g::AbstractGraph{U},
-          src::W;
-          goal::Union{W,Nothing}=nothing,
-          distmx::AbstractMatrix{T}=weights(g),
-          restrictions::Union{AbstractDict{V,Vector{MutableLinkedList{V}}},Nothing}=nothing,
-          heuristic::Function=h(u, v) =  0.0,
-          )::Vector{U} where {T <: Real,U <: Integer,V <: Integer,W <: Integer}
+          weights::AbstractMatrix{T},
+          src::W,
+          goal::W;
+          heuristic::Function=(u, v) ->  0.0,
+          cost_adjustment::Function=(u, v, parents) -> 0.0
+          ) where {T <: Real, U <: Integer, W <: Integer}
 
-A* shortest path algorithm taken and adapted from `Graphs.jl`. This version improves runtime 
-speed, memory usage, has a more flexible heruistic function, and accounts for OpenStreetMap 
-turn restrictions.
+A* shortest path algorithm. Implemented with a min heap. Using a min heap is faster than using 
+a priority queue given the sparse nature of OpenStreetMap data, i.e. vertices far outnumber edges.
+
+Compared to `jl`, this version improves runtime, memory usage, has a flexible heuristic 
+function, and accounts for OpenStreetMap turn restrictions through the `cost_adjustment` function.
+
+**Note**: A heuristic that does not accurately estimate the remaining cost to `goal` (i.e. overestimating
+heuristic) will result in a non-optimal path (i.e. not the shortest), dijkstra on the other hand 
+guarantees the optimal path as the heuristic cost is zero.
 
 # Arguments
 - `g::AbstractGraph{U}`: Graphs abstract graph object.
+- `weights::AbstractMatrix{T}`: Edge weights matrix.
 - `src::W`: Source vertex.
-- `goal::Union{W,Nothing}=nothing`: Optional target vertex as a break condition.
-- `distmx::AbstractMatrix{T}=weights(g)`: Optional weight matrix.
-- `restrictions::Union{AbstractDict{V,Vector{MutableLinkedList{V}}},Nothing}=nothing`: Optional 
-dictionary of restrictions, keyed by vertex, each restriction is a linked list of vertices, 
-any path containing the entire list will have an infinite cost assigned to it.
+- `goal::W`: Goal vertex.
 - `heuristic::Function=h(u, v) =  0.0`: Heuristic cost function, takes a source and target vertex, default is 0.
+- `cost_adjustment:::Function=r(u, v, parents) = 0.0`: Optional cost adjustment function for use cases such as turn restrictions, takes a source and target vertex, defaults to 0.
+
+# Return
+- `Union{Nothing,Vector{U}}`: Array veritces represeting shortest path between `src` to `goal`.
+"""
+function astar(g::AbstractGraph{U},
+               weights::AbstractMatrix{T},
+               src::W,
+               goal::W;
+               heuristic::Function=(u, v) ->  0.0,
+               cost_adjustment::Function=(u, v, parents) -> 0.0
+               ) where {T <: Real, U <: Integer, W <: Integer}
+    # Preallocate
+    heap = BinaryHeap{Tuple{T, U, U}}(FastMin) # (f = g + h, current, path length)
+    dists = fill(typemax(T), nv(g))
+    parents = zeros(U, nv(g))
+    visited = zeros(Bool, nv(g))
+    len = zero(U)
+
+    # Initialize src
+    dists[src] = zero(T)
+    push!(heap, (zero(T), src, len))
+
+    while !isempty(heap)
+        _, u, len = pop!(heap) # (f = g + h, current, path length)
+        visited[u] && continue
+        visited[u] = true
+        len += one(U)
+        u == goal && break # optimal path to goal found
+        d = dists[u]
+
+        for v in outneighbors(g, u)
+            visited[v] && continue
+            alt = d + weights[u, v] + cost_adjustment(u, v, parents) # turn restriction would imply `Inf` cost adjustment
+            
+            if alt < dists[v]
+                dists[v] = alt
+                parents[v] = u
+                push!(heap, (alt + heuristic(v, goal), v, len))
+            end
+        end
+    end
+
+    return path_from_parents(parents, goal, len)
+end
+
+"""
+    dijkstra(g::AbstractGraph{U},
+             weights::AbstractMatrix{T},
+             src::W,
+             goal::W;
+             cost_adjustment::Function=(u, v, parents) -> 0.0
+             ) where {T <: Real, U <: Integer}
+
+Dijkstra's shortest path algorithm with an early exit condition, is the same as astar with heuristic cost as 0.
+
+# Arguments
+- `g::AbstractGraph{U}`: Graphs abstract graph object.
+- `weights::AbstractMatrix{T}`: Edge weights matrix.
+- `src::W`: Source vertex.
+- `goal::W`: Goal vertex.
+- `cost_adjustment:::Function=r(u, v, parents) = 0.0`: Optional cost adjustment function for use cases such as turn restrictions, takes a source and target vertex, defaults to 0.
+
+# Return
+- `Union{Nothing,Vector{U}}`: Array veritces represeting shortest path between `src` to `goal`.
+"""
+function dijkstra(g::AbstractGraph{U},
+                  weights::AbstractMatrix{T},
+                  src::W,
+                  goal::W;
+                  cost_adjustment::Function=(u, v, parents) -> 0.0
+                  ) where {T <: Real, U <: Integer, W <: Integer}
+    return astar(g, weights, src, goal; cost_adjustment=cost_adjustment)
+end
+
+"""
+    dijkstra(g::AbstractGraph{U},
+             weights::AbstractMatrix{T},
+             src::W;
+             cost_adjustment::Function=(u, v, parents) -> 0.0
+             ) where {T <: Real, U <: Integer, W <: Integer}
+
+Dijkstra's shortest path algorithm, implemented with a min heap. Using a min heap is faster than using 
+a priority queue given the sparse nature of OpenStreetMap data, i.e. vertices far outnumber edges.
+
+This dispatch returns full set of `parents` or the `dijkstra state` given a source vertex, i.e. without
+and early exit condition of `goal`.
+
+# Arguments
+- `g::AbstractGraph{U}`: Graphs abstract graph object.
+- `weights::AbstractMatrix{T}`: Edge weights matrix.
+- `src::W`: Source vertex.
+- `cost_adjustment:::Function=r(u, v, parents) = 0.0`: Optional cost adjustment function for use cases such as turn restrictions, takes a source and target vertex, defaults to 0.
 
 # Return
 - `Vector{U}`: Array parent veritces from which the shortest path can be extracted.
 """
-function astar(g::AbstractGraph{U},
-               src::W;
-               goal::Union{W,Nothing}=nothing,
-               distmx::AbstractMatrix{T}=weights(g),
-               restrictions::Union{AbstractDict{V,Vector{MutableLinkedList{V}}},Nothing}=nothing,
-               heuristic::Function=h(u, v) =  0.0,
-               )::Vector{U} where {T <: Real,U <: Integer,V <: Integer,W <: Integer}
-    nvg = nv(g)
-    
+function dijkstra(g::AbstractGraph{U},
+                  weights::AbstractMatrix{T},
+                  src::W;
+                  cost_adjustment::Function=(u, v, parents) -> 0.0
+                  ) where {T <: Real, U <: Integer, W <: Integer}
     # Preallocate
-    visited = zeros(Bool, nvg)
-    H = PriorityQueue{U,T}()
-    dists = fill(typemax(T), nvg)
-    parents = zeros(U, nvg)
+    heap = BinaryHeap{Tuple{T, U}}(FastMin) # (weight, current)
+    dists = fill(typemax(T), nv(g))
+    parents = zeros(U, nv(g))
+    visited = zeros(Bool, nv(g))
 
     # Initialize src
-    H[src] = zero(T)
+    push!(heap, (zero(T), src))
     dists[src] = zero(T)
-    parents[src] = 0
 
-    while !isempty(H)
-        u = dequeue!(H)
-        d = dists[u]
+    while !isempty(heap)
+        _, u = pop!(heap) # (weight, current)
+        visited[u] && continue
         visited[u] = true
+        d = dists[u]
 
         for v in outneighbors(g, u)
             visited[v] && continue
-
-            dist_u_v = distmx[u, v]
-
-            if restrictions !== nothing && haskey(restrictions, u)
-                for ll in restrictions[u]
-                    if is_restricted(ll, u, v, parents)
-                        dist_u_v = typemax(T) # Means path from u -> v is restricted, given parents
-                        break
-                    end
-                end
-            end
-
-            alt = d + dist_u_v
-
+            alt = d + weights[u, v] + cost_adjustment(u, v, parents) # turn restriction would imply `Inf` cost adjustment
+            
             if alt < dists[v]
-                H[v] = alt + heuristic(v, goal)
                 dists[v] = alt
                 parents[v] = u
-                if goal == v && goal == peek(H).first
-                    # If v is the goal (destination) and the goal is the first node in the
-                    # priotity queue, we have found the optimal path so return parents
-                    return parents
-                end
+                push!(heap, (alt, v))
             end
         end
     end
@@ -82,51 +157,55 @@ function astar(g::AbstractGraph{U},
 end
 
 """
-Dijkstra shortest path algorithm, same as A* but without a heuristic cost function.
+    path_from_parents(parents::Vector{<:U}, goal::V)::Vector{U} where {U <: Integer, V <: Integer}
+
+Extracts shortest path given dijkstra parents of a given source.
+
+# Arguments
+- `parents::Vector{U}`: Array of dijkstra parent states.
+- `goal::V`: Goal vertex.
+
+# Return
+- `Union{Nothing,Vector{U}}`: Array veritces represeting shortest path to `goal`.
 """
-function dijkstra(g::AbstractGraph{U},
-                  src::W;
-                  goal::Union{W,Nothing}=nothing,
-                  distmx::AbstractMatrix{T}=weights(g),
-                  restrictions::Union{AbstractDict{V,Vector{MutableLinkedList{V}}},Nothing}=nothing
-                  )::Vector{U} where {T <: Real,U <: Integer,V <: Integer,W <: Integer}
-    return astar(g, src, goal=goal, distmx=distmx, restrictions=restrictions)
+function path_from_parents(parents::Vector{<:U}, goal::V) where {U <: Integer, V <: Integer}
+    parents[goal] == 0 && return
+    
+    pointer = goal
+    path = U[]
+    
+    while pointer != 0 # parent of origin is always 0
+        push!(path, pointer)
+        pointer = parents[pointer]
+    end
+
+    return reverse(path)
 end
 
 """
-    is_restricted(restriction_ll::MutableLinkedList{V}, u::U, v::U, parents::Vector{U})::Bool where {U <: Integer,V <: Integer}
+    path_from_parents(parents::Vector{<:U}, goal::V, path_length::N)::Vector{U} where {U <: Integer, V <: Integer, N <: Integer}
 
-Returns true if path between u and v is restricted, given parents.
+Extracts shortest path given dijkstra parents of a given source, providing `path_length` allows
+preallocation of the array and avoids the need to reverse the path.
 
 # Arguments
-- `restriction_ll::MutableLinkedList{V}`: Linked list holding vertices in order of v -> parents.
-- `u::U`: Current vertex visiting.
-- `v::U`: Current neighbour vertex.
-- `parents::Vector{U}`: Vector mapping of shortest path parents.
+- `parents::Vector{U}`: Array of dijkstra parent states.
+- `goal::V`: Goal vertex.
+- `path_kength::N`: Known length of the return path, allows preallocation of final path array.
 
 # Return
-- `Bool`: Returns true if path between u and v is restricted.
+- `Union{Nothing,Vector{U}}`: Array veritces represeting shortest path to `goal`.
 """
-function is_restricted(restriction_ll::MutableLinkedList{V}, u::U, v::U, parents::Vector{U})::Bool where {U <: Integer,V <: Integer}
-    current = restriction_ll.node.next
+function path_from_parents(parents::Vector{<:U}, goal::V, path_length::N) where {U <: Integer, V <: Integer, N <: Integer}
+    parents[goal] == 0 && return
+    
+    pointer = goal
+    path = Vector{U}(undef, path_length)
 
-    if v != current.data
-        return false
+    for i in one(U):path_length
+        path[path_length - i + one(U)] = pointer
+        pointer = parents[pointer]
     end
 
-    checked = 1 # already checked v
-
-    while checked < restriction_ll.len
-        current = current.next
-
-        if u == current.data
-            u = parents[u]
-        else
-            return false
-        end
-
-        checked += 1
-    end
-
-    return true
+    return path
 end
