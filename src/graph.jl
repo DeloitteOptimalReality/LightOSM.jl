@@ -173,6 +173,8 @@ end
 
 
 """
+    add_node_and_edge_mappings!(g::OSMGraph{U,T,W}) where {U <: Integer,T <: Integer,W <: Real}
+
 Adds mappings between nodes, edges and ways to `OSMGraph`.
 """
 function add_node_and_edge_mappings!(g::OSMGraph{U,T,W}) where {U <: Integer,T <: Integer,W <: Real}
@@ -208,6 +210,8 @@ function add_node_and_edge_mappings!(g::OSMGraph{U,T,W}) where {U <: Integer,T <
 end
 
 """
+    add_node_tags!(g::OSMGraph)
+
 Adds maxspeed and lanes tags to every `OSMGraph` node.
 """
 function add_node_tags!(g::OSMGraph)
@@ -233,6 +237,8 @@ function add_node_tags!(g::OSMGraph)
 end
 
 """
+    adjacent_node(g::OSMGraph, node::T, way::T)::Union{T,Vector{<:T}} where T <: Integer
+
 Finds the adjacent node id on a given way.
 """
 function adjacent_node(g::OSMGraph, node::T, way::T)::Union{T,Vector{<:T}} where T <: Integer
@@ -258,6 +264,8 @@ function adjacent_node(g::OSMGraph, node::T, way::T)::Union{T,Vector{<:T}} where
 end
 
 """
+    add_indexed_restrictions!(g::OSMGraph{U,T,W}) where {U <: Integer,T <: Integer,W <: Real}
+
 Adds restrictions linked lists to `OSMGraph`.
 
 # Example
@@ -318,6 +326,8 @@ function add_indexed_restrictions!(g::OSMGraph{U,T,W}) where {U <: Integer,T <: 
 end
 
 """
+    add_weights!(g::OSMGraph, weight_type::Symbol=:distance)
+
 Adds edge weights to `OSMGraph`.
 """
 function add_weights!(g::OSMGraph, weight_type::Symbol=:distance)
@@ -360,6 +370,8 @@ function add_weights!(g::OSMGraph, weight_type::Symbol=:distance)
 end
 
 """
+    add_graph!(g::OSMGraph, graph_type::Symbol=:static)
+
 Adds a Graphs.AbstractGraph object to `OSMGraph`.
 """
 function add_graph!(g::OSMGraph, graph_type::Symbol=:static)
@@ -380,6 +392,8 @@ function add_graph!(g::OSMGraph, graph_type::Symbol=:static)
 end
 
 """
+    trim_to_largest_connected_component!(g::OSMGraph{U, T, W}, graph, weight_type::Symbol=:time, graph_type::Symbol=:static) where {U, T, W}
+
 Trims graph object to the largest connected component.
 """
 function trim_to_largest_connected_component!(g::OSMGraph{U, T, W}, graph, weight_type::Symbol=:time, graph_type::Symbol=:static) where {U, T, W}
@@ -413,22 +427,24 @@ function trim_to_largest_connected_component!(g::OSMGraph{U, T, W}, graph, weigh
 end
 
 """
-Adds precomputed dijkstra states for every source node in `OSMGraph`, not recommended for graphs with greater than 50k nodes.
+    add_dijkstra_states!(g::OSMGraph{U,T,W}) where {U <: Integer,T <: Integer,W <: Real}
+
+Adds precomputed dijkstra states for every source node in `OSMGraph`. Precomputing all dijkstra 
+states is a O(V² + ElogV) operation, where E is the number of edges and V is the number of vertices, 
+may not be possible for larger graphs. Not recommended for graphs with greater than 50k nodes.
+
+Note: Not using `cost_adjustment`, i.e. not consdering restrictions in dijkstra computation, 
+consider adding in the future.
 """
 function add_dijkstra_states!(g::OSMGraph{U,T,W}) where {U <: Integer,T <: Integer,W <: Real}
-    srcs = collect(vertices(g.graph)) # source vertices (origin node indices)
-
-    n = length(srcs)
-    @info "Precomputing $n Dijkstra States, this might take a while..."
-    n > 50000 && @warn "Precomputing and caching all $n Dijkstra States may not be possible due to memory limits"
+    @warn "Precomputing all dijkstra states is a O(V² + ElogV) operation, may not be possible for larger graphs."
     g.dijkstra_states = Vector{Vector{U}}(undef, n)
-
-    Threads.@threads for src in srcs
-        g.dijkstra_states[src] = dijkstra(g.graph, src, distmx=g.weights, restrictions=g.indexed_restrictions)
-    end
+    set_dijkstra_state!(g, collect(vertices(g.graph)))
 end
 
 """
+    add_kdtree!(g::OSMGraph)
+
 Adds KDTree to `OSMGraph` for finding nearest neighbours.
 """
 function add_kdtree!(g::OSMGraph)

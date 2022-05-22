@@ -7,4 +7,5 @@ Node
 Way
 Restriction
 Building
+PathAlgorithm
 ```

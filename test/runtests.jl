@@ -1,7 +1,9 @@
+using Graphs
 using HTTP
 using JSON
 using LightOSM
 using LightXML
+using SparseArrays
 using Test
 
 include("stub.jl")
@@ -14,4 +16,5 @@ include("stub.jl")
     @testset "Nearest Node" begin include("nearest_node.jl") end
     @testset "Shortest Path" begin include("shortest_path.jl") end
     @testset "Graph" begin include("graph.jl") end
+    @testset "Traversal" begin include("traversal.jl") end
 end
