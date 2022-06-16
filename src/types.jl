@@ -5,7 +5,7 @@ Representation of a geospatial coordinates.
 - `lon::Float64`: Longitude.
 - `alt::Float64`: Altitude.
 """
-@with_kw struct GeoLocation
+@with_kw_noshow struct GeoLocation
     lat::Float64
     lon::Float64
     alt::Float64 = 0.0
