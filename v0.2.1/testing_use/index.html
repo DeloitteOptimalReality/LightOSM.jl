@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Unit Test Use · LightOSM.jl Documentation</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">LightOSM.jl Documentation</span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><span class="tocitem">Interface</span><ul><li><a class="tocitem" href="../types/">Types</a></li><li><a class="tocitem" href="../download_network/">Download OpenStreetMap Network</a></li><li><a class="tocitem" href="../create_graph/">Create <code>OSMGraph</code> Object</a></li><li><a class="tocitem" href="../shortest_path/">Shortest Path</a></li><li><a class="tocitem" href="../nearest_node/">Nearest Node</a></li><li><a class="tocitem" href="../download_buildings/">Download OpenStreetMap Buildings</a></li><li><a class="tocitem" href="../create_buildings/">Create <code>Building</code> Objects</a></li><li><a class="tocitem" href="../geolocation/"><code>GeoLocation</code> Methods</a></li></ul></li><li class="is-active"><a class="tocitem" href>Unit Test Use</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Unit Test Use</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Unit Test Use</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/DeloitteDigitalAPAC/LightOSM.jl/blob/master/docs/src/testing_use.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Using-LightOSM-in-Unit-Tests"><a class="docs-heading-anchor" href="#Using-LightOSM-in-Unit-Tests">Using LightOSM in Unit Tests</a><a id="Using-LightOSM-in-Unit-Tests-1"></a><a class="docs-heading-anchor-permalink" href="#Using-LightOSM-in-Unit-Tests" title="Permalink"></a></h1><p>To avoid having to download graphs within unit tests, it is suggested that something similar to the <code>OSMGraph</code> stub used in LightOSM&#39;s own tests (see <a href="https://github.com/DeloitteDigitalAPAC/LightOSM.jl/blob/master/test/stub.jl"><code>test/stub.jl</code></a>) is used by your package. This allows you to have explicit control over the structure of the graph and therefore to have explicit tests.</p><h3 id="Manual-Stub-Creation"><a class="docs-heading-anchor" href="#Manual-Stub-Creation">Manual Stub Creation</a><a id="Manual-Stub-Creation-1"></a><a class="docs-heading-anchor-permalink" href="#Manual-Stub-Creation" title="Permalink"></a></h3><p>To create your own graph stub, the nodes and ways must be manually created and inputted. Restrictions can also be optionally added.</p><h4 id="Nodes"><a class="docs-heading-anchor" href="#Nodes">Nodes</a><a id="Nodes-1"></a><a class="docs-heading-anchor-permalink" href="#Nodes" title="Permalink"></a></h4><p>Nodes must be have an ID and GeoLocation</p><pre><code class="language-julia">lats = [-38.0751637, -38.0752637, -38.0753637, -38.0754637]
+lons = [145.3326838, 145.3326838, 145.3326838, 145.3326833]
+node_ids = [1001, 1002, 1003, 1004]
+nodes = Dict(
+    id =&gt; Node(
+        id,
+        GeoLocation(lat, lon),
+        Dict{String, Any}() # Don&#39;t need tags
+    ) for (lat, lon, id) in zip(lats, lons, node_ids)
+)</code></pre><h4 id="Ways"><a class="docs-heading-anchor" href="#Ways">Ways</a><a id="Ways-1"></a><a class="docs-heading-anchor-permalink" href="#Ways" title="Permalink"></a></h4><p>Ways must have an ID, a node list that only includes nodes you have defined and must include the tags in the example shown below.</p><pre><code class="language-julia">way_ids = [2001, 2002]
+way_nodes = [
+    [1001, 1002, 1003],
+    [1003, 1004],
+]
+tag_dicts = [
+    Dict{String, Any}(
+        &quot;oneway&quot; =&gt; false,
+        &quot;reverseway&quot; =&gt; false,
+        &quot;maxspeed&quot; =&gt; Int16(50),
+        &quot;lanes&quot; =&gt; Int8(2)
+    ),
+    Dict{String, Any}(
+        &quot;oneway&quot; =&gt; false,
+        &quot;reverseway&quot; =&gt; false,
+        &quot;maxspeed&quot; =&gt; Int16(50),
+        &quot;lanes&quot; =&gt; Int8(2)
+    ),
+]
+ways = Dict(way_id =&gt; Way(way_id, nodes, tag_dict) for (way_id, nodes, tag_dict) in zip(way_ids, way_nodes, tag_dicts))</code></pre><h4 id="Graph-creation"><a class="docs-heading-anchor" href="#Graph-creation">Graph creation</a><a id="Graph-creation-1"></a><a class="docs-heading-anchor-permalink" href="#Graph-creation" title="Permalink"></a></h4><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>The functions here are not part of the stable API and will be replaced by a <code>generate_graph</code> function or similar</p></div></div><p>Creating the graph relies on some LightOSM internals to populate all other fields of the <code>OSMGraph</code> object</p><pre><code class="language-julia">U = LightOSM.DEFAULT_OSM_INDEX_TYPE
+T = LightOSM.DEFAULT_OSM_ID_TYPE
+W = LightOSM.DEFAULT_OSM_EDGE_WEIGHT_TYPE
+g = OSMGraph{U,T,W}(nodes=nodes, ways=ways)
+LightOSM.add_node_and_edge_mappings!(g)
+LightOSM.add_weights!(g, :distance) # or :time
+LightOSM.add_graph!(g, :static) # or any desired graph type
+LightOSM.add_node_tags!(g)
+g.dijkstra_states = Vector{Vector{U}}(undef, length(g.nodes))
+LightOSM.add_kdtree!(g)</code></pre><h4 id="Restrictions"><a class="docs-heading-anchor" href="#Restrictions">Restrictions</a><a id="Restrictions-1"></a><a class="docs-heading-anchor-permalink" href="#Restrictions" title="Permalink"></a></h4><p>Optionally, restrictions can be added.</p><pre><code class="language-julia">restriction1 = Restriction(
+    3001,
+    &quot;via_node&quot;,
+    Dict{String, Any}(&quot;restriction&quot;=&gt;&quot;only_straight_on&quot;,&quot;type&quot;=&gt;&quot;restriction&quot;),
+    2001,
+    2002,
+    1003, # must be set if restriction is via_node
+    nothing, # must be set if restriction is via_way
+    false, # true for no_left_turn, no_right_turn, no_u_turn, no_straight_on
+    true # true for only_right_turn, only_left_turn, only_straight_on
+)
+restrictions = Dict(restriction1.id =&gt; restriction1)</code></pre><p>See <a href="../types/#LightOSM.Restriction"><code>Restriction</code></a> for more information on <code>Restriction</code> objects.</p><p>And then when instantiating the <code>OSMGraph</code></p><pre><code class="language-julia">g = OSMGraph{U,T,W}(nodes=nodes, ways=ways, restrictions=restrictions)
+LightOSM.add_indexed_restrictions!(g)</code></pre><h3 id="Using-the-LightOSM-stub"><a class="docs-heading-anchor" href="#Using-the-LightOSM-stub">Using the LightOSM stub</a><a id="Using-the-LightOSM-stub-1"></a><a class="docs-heading-anchor-permalink" href="#Using-the-LightOSM-stub" title="Permalink"></a></h3><div class="admonition is-danger"><header class="admonition-header">This is not part of the API</header><div class="admonition-body"><p>Using this function is not part of the packages API, and thereore may change without respecting Semantic Versioning. It is suggested to create your own stub for your own package, rather than using this.</p></div></div><p>To use the stub provided in LightOSM, run the following in your tests</p><pre><code class="language-julia">using LightOSM
+include(joinpath(pathof(LightOSM), &quot;test&quot;, &quot;stub.jl&quot;))
+g = basic_osm_graph_stub()</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../geolocation/">« <code>GeoLocation</code> Methods</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Wednesday 29 June 2022 03:40">Wednesday 29 June 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
