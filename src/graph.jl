@@ -452,3 +452,25 @@ function add_kdtree!(g::OSMGraph)
     cartesian_locations = to_cartesian(node_locations)
     g.kdtree = KDTree(cartesian_locations)
 end
+
+"""
+    get_graph_type(g::OSMGraph)
+
+Detects the type of the underlying graph object `g.graph` and returns the Symbol
+used to specify that type in `add_graph!`.
+"""
+function get_graph_type(g::OSMGraph)
+    graph_type = typeof(g.graph)
+
+    if graph_type <: DiGraph
+        return :light
+    elseif graph_type <: StaticDiGraph
+        return :static
+    elseif graph_type <: SimpleWeightedDiGraph
+        return :simple_weighted
+    elseif graph_type <: MetaDiGraph
+        return :meta
+    else
+        throw(ErrorException("Graph is of unexpected type $graph_type"))
+    end
+end

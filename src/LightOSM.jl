@@ -45,7 +45,9 @@ export GeoLocation,
        download_osm_buildings,
        buildings_from_object,
        buildings_from_download,
-       buildings_from_file
+       buildings_from_file,
+       osm_subgraph,
+       get_graph_type
 
 export index_to_node_id,
        index_to_node,
@@ -70,5 +72,6 @@ include("traversal.jl")
 include("shortest_path.jl")
 include("nearest_node.jl")
 include("buildings.jl")
+include("subgraph.jl")
 
 end # module
