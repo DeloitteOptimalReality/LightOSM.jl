@@ -12,8 +12,10 @@ Representation of a geospatial coordinates.
 end
 
 GeoLocation(lat::AbstractFloat, lon::AbstractFloat)::GeoLocation = GeoLocation(lat=lat, lon=lon)
+GeoLocation(lat::Real, lon::Real)::GeoLocation = GeoLocation(lat=float(lat), lon=float(lon))
 GeoLocation(point::Vector{<:AbstractFloat})::GeoLocation = GeoLocation(point...)
-GeoLocation(point_vector::Vector{<:Vector{<:AbstractFloat}})::Vector{GeoLocation} = [GeoLocation(p...) for p in point_vector]
+GeoLocation(point::Vector{<:Real})::GeoLocation = GeoLocation([float(coord) for coord in point]...)
+GeoLocation(point_vector::Vector{<:Vector{<:Real}})::Vector{GeoLocation} = [GeoLocation(p...) for p in point_vector]
 
 function Base.:(==)(loc1::GeoLocation, loc2::GeoLocation)
     return loc1.lat == loc2.lat && loc1.lon == loc2.lon && loc1.alt == loc2.alt
