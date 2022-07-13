@@ -374,16 +374,16 @@ end
 
 Adds a Graphs.AbstractGraph object to `OSMGraph`.
 """
-function add_graph!(g::OSMGraph, graph_type::Symbol=:static)
+function add_graph!(g::OSMGraph{U, T, W}, graph_type::Symbol=:static) where {U <: Integer, T <: Integer, W <: Real}
     if graph_type == :light
-        g.graph = DiGraph(g.weights)
+        g.graph = DiGraph{T}(g.weights)
     elseif graph_type == :static
-        g.graph = StaticDiGraph(DiGraph(g.weights))
+        g.graph = StaticDiGraph{U,U}(StaticDiGraph(DiGraph(g.weights)))
     elseif graph_type == :simple_weighted
-        g.graph = SimpleWeightedDiGraph(g.weights)
+        g.graph = SimpleWeightedDiGraph{U,W}(g.weights)
     elseif graph_type == :meta
-        g.graph = MetaDiGraph(DiGraph(g.weights))
-        for (o, d, w) in zip(findnz(transpose(g.weights))...)
+        g.graph = MetaDiGraph(DiGraph{T}(g.weights))
+        for (o, d, w) in zip(findnz(copy(transpose(g.weights)))...)
             set_prop!(g.graph, o, d, :weight, w)
         end
     else

@@ -5,6 +5,7 @@ g = basic_osm_graph_stub()
     nlist = [n.id for n in values(g.nodes)]
     sg = osm_subgraph(g, nlist)
     @test get_graph_type(g) === :static
+    @test typeof(sg.graph) === typeof(g.graph)
     @test sg.nodes == g.nodes
     @test sg.ways == g.ways
     @test sg.restrictions == g.restrictions
@@ -17,4 +18,19 @@ g = basic_osm_graph_stub()
     if isdefined(g.kdtree, 1)
         @test typeof(sg.kdtree) == typeof(g.kdtree)
     end
+
+    g.graph = nothing
+    LightOSM.add_graph!(g, :light)
+    sg = osm_subgraph(g, nlist)
+    @test typeof(sg.graph) === typeof(g.graph)
+
+    g.graph = nothing
+    LightOSM.add_graph!(g, :simple_weighted)
+    sg = osm_subgraph(g, nlist)
+    @test typeof(sg.graph) === typeof(g.graph)
+
+    g.graph = nothing
+    LightOSM.add_graph!(g, :meta)
+    sg = osm_subgraph(g, nlist)
+    @test typeof(sg.graph) === typeof(g.graph)
 end

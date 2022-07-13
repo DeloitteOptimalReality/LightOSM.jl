@@ -1,4 +1,4 @@
-@testset "desiralizers" begin
+@testset "deserializers" begin
     @test LightOSM.string_deserializer(:xml) == LightXML.parse_string
     @test LightOSM.string_deserializer(:osm) == LightXML.parse_string
     @test LightOSM.string_deserializer(:json) == JSON.parse
@@ -100,4 +100,21 @@ end
     @test LightOSM.validate_save_location(noextension, :xml) == noextension * ".xml"
     @test LightOSM.validate_save_location(noextension, :json) == noextension * ".json"
     @test LightOSM.validate_save_location(noextension, :osm) == noextension * ".osm"
+end
+
+@testset "type consistency" begin
+    floats = Vector{Vector{Float64}}([
+        Vector{Float64}([23.0, 123.0]),
+        Vector{Float64}([-23.0, 122.0]),
+        Vector{Float64}([-30.0, 121.0])
+        ])
+    ints = Vector{Vector{Int64}}([
+        Vector{Int64}([23, 123]),
+        Vector{Int64}([-23, 122]),
+        Vector{Int64}([-30, 121])
+        ])
+    @test GeoLocation(floats[1][1], floats[1][2]) === GeoLocation(ints[1][1], ints[1][2])
+    @test GeoLocation(floats[1]) === GeoLocation(ints[1])
+    @test GeoLocation(floats) == GeoLocation(ints)
+    @test typeof(GeoLocation(floats)) === typeof(GeoLocation(ints))
 end

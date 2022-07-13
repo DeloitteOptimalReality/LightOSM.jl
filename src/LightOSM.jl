@@ -4,11 +4,11 @@ using Parameters
 using DataStructures: DefaultDict, OrderedDict, MutableLinkedList
 using QuickHeaps: BinaryHeap, FastMin
 using Statistics: mean
-using SparseArrays: SparseMatrixCSC, sparse
+using SparseArrays: SparseMatrixCSC, sparse, findnz
 using Graphs: AbstractGraph, DiGraph, nv, outneighbors, weakly_connected_components, vertices
 using StaticGraphs: StaticDiGraph
 using SimpleWeightedGraphs: SimpleWeightedDiGraph
-using MetaGraphs: MetaDiGraph
+using MetaGraphs: MetaDiGraph, set_prop!
 using NearestNeighbors: Euclidean, KDTree, knn, nn
 using HTTP
 using JSON
