@@ -7,7 +7,7 @@ Create an OSMGraph representing a subgraph of another OSMGraph containing
 specified vertices.
 The resulting OSMGraph object will also contain vertices from all ways that the
 specified vertices (nodes) are members of.
-Vertex numbers within the graph object are not mapped onto the subgraph.
+Vertex numbers within the original graph object are not mapped to the subgraph.
 """
 function osm_subgraph(g::OSMGraph{U, T, W},
                       vertex_list::Vector{U}
@@ -21,8 +21,9 @@ function osm_subgraph(g::OSMGraph{U, T, W},
 
     # Make sure number of nodes matches number of nodes from ways (adds some nodes to graph)
     for way in values(ways)
-        append!(nodelist, [g.nodes[n] for n in setdiff(g.ways[way.id].nodes, nodelist)])
+        append!(nodelist, g.nodes[n_id] for n_id in g.ways[way.id].nodes)
     end
+    unique!(nodelist)
     nodes = Dict{T, Node{T}}([n.id for n in nodelist] .=> nodelist)
 
     # Get restrictions that involve selected ways
@@ -35,10 +36,10 @@ function osm_subgraph(g::OSMGraph{U, T, W},
 
     # Construct the OSMGraph
     osg = OSMGraph{U, T, W}(nodes=nodes, ways=ways, restrictions=restrictions)
-    LightOSM.add_node_and_edge_mappings!(osg)
+    add_node_and_edge_mappings!(osg)
     !isnothing(g.weight_type) && add_weights!(osg, g.weight_type)
-    LightOSM.add_graph!(osg, get_graph_type(g))
-    LightOSM.add_node_tags!(osg)
+    add_graph!(osg, get_graph_type(g))
+    add_node_tags!(osg)
 
     if isdefined(g.dijkstra_states, 1)
         add_dijkstra_states!(osg)

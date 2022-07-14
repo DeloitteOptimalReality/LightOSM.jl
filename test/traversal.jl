@@ -78,9 +78,9 @@ result = Ref{Bool}(true)
 for destination in 1:length(distance_g.nodes)
     # shortest path from vertex 4 to all others
     # vertex 4 is sensitive to heuristic choice (i.e. yields non-optiomal solution if a poor heuristic is chosen)
-    origin = 4
-    astar_path = LightOSM.astar(distance_g.graph, distance_g.weights, origin, destination; heuristic=LightOSM.distance_heuristic(distance_g))
-    dijkstra_path = LightOSM.dijkstra(distance_g.graph, distance_g.weights, origin, destination)
+    local origin = 4
+    local astar_path = LightOSM.astar(distance_g.graph, distance_g.weights, origin, destination; heuristic=LightOSM.distance_heuristic(distance_g))
+    local dijkstra_path = LightOSM.dijkstra(distance_g.graph, distance_g.weights, origin, destination)
     (isnothing(astar_path) || isnothing(dijkstra_path)) && continue
     result[] = result[] && astar_path == dijkstra_path
     result[] = result[] && total_path_weight(distance_g, index_to_node_id(distance_g, astar_path)) == total_path_weight(distance_g, index_to_node_id(distance_g, dijkstra_path))
@@ -109,9 +109,9 @@ result[] = true
 for destination in 1:length(time_g.nodes)
     # shortest path from vertex 4 to all others
     # vertex 4 is sensitive to heuristic choice (i.e. yields non-optiomal solution if a poor heuristic is chosen)
-    origin = 4
-    astar_path = LightOSM.astar(time_g.graph, time_g.weights, origin, destination; heuristic=LightOSM.time_heuristic(time_g))
-    dijkstra_path = LightOSM.dijkstra(time_g.graph, time_g.weights, origin, destination)
+    local origin = 4
+    local astar_path = LightOSM.astar(time_g.graph, time_g.weights, origin, destination; heuristic=LightOSM.time_heuristic(time_g))
+    local dijkstra_path = LightOSM.dijkstra(time_g.graph, time_g.weights, origin, destination)
     (isnothing(astar_path) || isnothing(dijkstra_path)) && continue
     result[] = result[] && astar_path == dijkstra_path
     result[] = result[] && total_path_weight(time_g, index_to_node_id(time_g, astar_path)) == total_path_weight(time_g, index_to_node_id(time_g, dijkstra_path))
