@@ -167,10 +167,14 @@ end
 """
 PathAlgorithm.
 
-Abstract type for path finding algorithms, concrete types are:
+Abstract type for path finding algorithms:
 - `Dijkstra`
 - `AStar`
 """
 abstract type PathAlgorithm end
-struct Dijkstra <: PathAlgorithm end
-struct AStar <: PathAlgorithm end
+abstract type Dijkstra <: PathAlgorithm end
+abstract type DijkstraVector <: Dijkstra end
+abstract type DijkstraDict <: Dijkstra end
+abstract type AStar <: PathAlgorithm end
+abstract type AStarVector <: AStar end
+abstract type AStarDict <: AStar end

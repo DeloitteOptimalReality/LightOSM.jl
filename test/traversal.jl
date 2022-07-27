@@ -11,6 +11,11 @@ g3, w3 = stub_graph3()
 @test LightOSM.astar(g1, w1, 1, 5) == LightOSM.dijkstra(g1, w1, 1, 5) == [1, 4, 5]
 @test LightOSM.astar(g2, w2, 1, 6) == LightOSM.dijkstra(g2, w2, 1, 6) == [1, 4, 7, 6]
 @test LightOSM.astar(g3, w3, 1, 3) == LightOSM.dijkstra(g3, w3, 1, 3) == [1, 4, 2, 3]
+for (T1, T2) in Base.product((AStar, AStarVector, AStarDict), (Dijkstra, DijkstraVector, DijkstraVector))
+    @test LightOSM.astar(T1, g1, w1, 1, 5) == LightOSM.dijkstra(T2, g1, w1, 1, 5) == [1, 4, 5]
+    @test LightOSM.astar(T1, g2, w2, 1, 6) == LightOSM.dijkstra(T2, g2, w2, 1, 6) == [1, 4, 7, 6]
+    @test LightOSM.astar(T1, g3, w3, 1, 3) == LightOSM.dijkstra(T2, g3, w3, 1, 3) == [1, 4, 2, 3]
+end
 
 # Construct shortest path from parents
 @test LightOSM.path_from_parents(LightOSM.dijkstra(g1, w1, 1), 5) == [1, 4, 5]
@@ -20,40 +25,45 @@ g3, w3 = stub_graph3()
 # astar with heuristic
 g = basic_osm_graph_stub()
 
-LightOSM.astar(
-    g.graph,
-    g.weights,
-    g.node_to_index[1008],
-    g.node_to_index[1003];
-    heuristic=LightOSM.distance_heuristic(g)
-) == [
-    g.node_to_index[1008],
-    g.node_to_index[1007],
-    g.node_to_index[1004],
-    g.node_to_index[1003]
-]
+for T in (AStar, AStarVector, AStarDict)
+    LightOSM.astar(
+        T,
+        g.graph,
+        g.weights,
+        g.node_to_index[1008],
+        g.node_to_index[1003];
+        heuristic=LightOSM.distance_heuristic(g)
+    ) == [
+        g.node_to_index[1008],
+        g.node_to_index[1007],
+        g.node_to_index[1004],
+        g.node_to_index[1003]
+    ]
 
-@test LightOSM.astar(
-    g.graph,
-    g.weights,
-    g.node_to_index[1008],
-    g.node_to_index[1002];
-    heuristic=LightOSM.distance_heuristic(g)
-) == [
-    g.node_to_index[1008],
-    g.node_to_index[1007],
-    g.node_to_index[1004],
-    g.node_to_index[1003],
-    g.node_to_index[1002]
-]
+    @test LightOSM.astar(
+        T,
+        g.graph,
+        g.weights,
+        g.node_to_index[1008],
+        g.node_to_index[1002];
+        heuristic=LightOSM.distance_heuristic(g)
+    ) == [
+        g.node_to_index[1008],
+        g.node_to_index[1007],
+        g.node_to_index[1004],
+        g.node_to_index[1003],
+        g.node_to_index[1002]
+    ]
 
-@test LightOSM.astar(
-    g.graph,
-    g.weights,
-    g.node_to_index[1003],
-    g.node_to_index[1008];
-    heuristic=LightOSM.distance_heuristic(g)
-) === nothing
+    @test LightOSM.astar(
+        T,
+        g.graph,
+        g.weights,
+        g.node_to_index[1003],
+        g.node_to_index[1008];
+        heuristic=LightOSM.distance_heuristic(g)
+    ) === nothing
+end
 
 # download graph, pick random nodes and test dijkstra and astar equality
 data = HTTP.get("https://raw.githubusercontent.com/captchanjack/LightOSMFiles.jl/main/maps/south-yarra.json")
