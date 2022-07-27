@@ -4,59 +4,84 @@
                   origin::Union{Integer,Node},
                   destination::Union{Integer,Node},
                   [weights::AbstractMatrix=g.weights;
-                  cost_adjustment::Function=(u, v, parents) -> 0.0)
+                  cost_adjustment::Function=(u, v, parents) -> 0.0),
+                  max_distance::W=typemax(W)]
 
 Calculates the shortest path between two OpenStreetMap node ids.
 
 # Arguments
-- `PathAlgorithm`: Path finding algorithm, choose either `Dijkstra` or `AStar`, defaults to `Dijkstra`.
-- `g::OSMGraph`: Graph container.
+- `PathAlgorithm` (optional): Path finding algorithm, possible values are:
+    - `Dijkstra`: Same as `DijkstraVector`. This is the default algorithm.
+    - `DijkstraVector`: Dijkstra's algorithm using the `Vector` implementation. 
+        Faster for small graphs and/or long paths.
+    - `DijkstraDict`: Dijkstra's algorithm using the `Dict` implementation.
+        Faster for large graphs and/or short paths.
+    - `AStar`: Same as `AStarVector`.
+    - `AStarVector`: A* algorithm using the `Vector` implementation.
+        Faster for small graphs and/or long paths.
+    - `AStarDict`: A* algorithm using the `Dict` implementation.
+        Faster for large graphs and/or short paths.
+- `g::OSMGraph{U,T,W}`: Graph container.
 - `origin::Union{Integer,Node}`: Origin OpenStreetMap node or node id.
-- `destination::Union{Integer,Node},`: Destination OpenStreetMap node or node id.
-- `weights`: Optional matrix of node to node edge weights, defaults to `g.weights`. If a custom weights matrix
-    is being used with algorithm set to `:astar`, make sure that a correct heuristic is being used.
-- `cost_adjustment::Function=(u, )`: Option to pass in a function to adjust the cost between each pair
-    of vetices `u` and `v`, normally the cost is just the weight between `u` and `v`, `cost_adjustment` takes
-    in 3 arguments; `u`, `v` and `parents` to apply an additive cost to the default weight. Defaults no adjustment.
-    Use `restriction_cost_adjustment` to consider turn restrictions.
-- `heuristic::Function=distance_heuristic(g)`: Use custom heuristic with the `AStar` algorithm only. Defaults to a 
-    function h(u, v) -> haversine(u, v), i.e. returns the haversine distances between `u` is the current
-    node and `v` is the neighbouring node. If `g.weight_type` is `:time` or `:lane_efficiency` use `time_heuristic(g)`
-    instead.
+- `destination::Union{Integer,Node},`: Destination OpenStreetMap node or node 
+    id.
+- `weights`: Optional matrix of node to node edge weights, defaults to 
+    `g.weights`. If a custom weights matrix is being used with algorithm set to
+    `AStar`, make sure that a correct heuristic is being used.
+- `cost_adjustment::Function=(u,v,parents) -> 0.0`: Option to pass in a function 
+    to adjust the cost between each pair of vetices `u` and `v`, normally the 
+    cost is just the weight between `u` and `v`, `cost_adjustment` takes in 3 
+    arguments; `u`, `v` and `parents`; to apply an additive cost to the default 
+    weight. Defaults no adjustment. Use `restriction_cost_adjustment` to 
+    consider turn restrictions.
+- `heuristic::Function=distance_heuristic(g)`: Use custom heuristic with the 
+    `AStar` algorithms only. Defaults to a function 
+    `h(u, v) -> haversine(u, v)`, i.e. returns the haversine distances between 
+    `u`, the current node, and `v`, the neighbouring node. If `g.weight_type` 
+    is `:time` or `:lane_efficiency`, use `time_heuristic(g)` instead.
 
 # Return
-- `Union{Nothing,Vector{T}}`: Array of OpenStreetMap node ids making up the shortest path.
+- `Union{Nothing,Vector{T}}`: Array of OpenStreetMap node ids making up 
+    the shortest path.
 """
-function shortest_path(::Type{Dijkstra},
-                       g::OSMGraph,
+function shortest_path(::Type{A},
+                       g::OSMGraph{U,T,W},
                        origin::Integer,
                        destination::Integer,
-                       weights::AbstractMatrix;
-                       cost_adjustment::Function=(u, v, parents) -> 0.0)
-    o_index = node_id_to_index(g, origin)
-    d_index = node_id_to_index(g, destination)
-    path = dijkstra(g.graph, weights, o_index, d_index; cost_adjustment=cost_adjustment)
-    isnothing(path) && return
-    return index_to_node_id(g, path)
-end
-function shortest_path(::Type{AStar},
-                       g::OSMGraph,
-                       origin::Integer,
-                       destination::Integer,
-                       weights::AbstractMatrix;
+                       weights::AbstractMatrix{W};
                        cost_adjustment::Function=(u, v, parents) -> 0.0,
-                       heuristic::Function=distance_heuristic(g))
+                       max_distance::W=typemax(W)
+                       )::Union{Nothing,Vector{T}} where {A <: Dijkstra, U, T, W}
     o_index = node_id_to_index(g, origin)
     d_index = node_id_to_index(g, destination)
-    path = astar(g.graph, weights, o_index, d_index; cost_adjustment=cost_adjustment, heuristic=heuristic)
+    path = dijkstra(A, g.graph, weights, o_index, d_index; cost_adjustment=cost_adjustment, max_distance=max_distance)
     isnothing(path) && return
     return index_to_node_id(g, path)
 end
-shortest_path(::Type{Dijkstra}, g::OSMGraph, origin::Integer, destination::Integer;  kwargs...) = shortest_path(Dijkstra, g, origin, destination, g.weights; kwargs...)
-shortest_path(::Type{Dijkstra}, g::OSMGraph, origin::Node, destination::Node, args...;  kwargs...) = shortest_path(Dijkstra, g, origin.id, destination.id, args...; kwargs...)
-shortest_path(::Type{AStar}, g::OSMGraph, origin::Integer, destination::Integer;  kwargs...) = shortest_path(AStar, g, origin, destination, g.weights; kwargs...)
-shortest_path(::Type{AStar}, g::OSMGraph, origin::Node, destination::Node, args...;  kwargs...) = shortest_path(AStar, g, origin.id, destination.id, args...; kwargs...)
-shortest_path(g::OSMGraph, args...;  kwargs...) = shortest_path(Dijkstra, g, args...; kwargs...)
+function shortest_path(::Type{A},
+                       g::OSMGraph{U,T,W},
+                       origin::Integer,
+                       destination::Integer,
+                       weights::AbstractMatrix{W};
+                       cost_adjustment::Function=(u, v, parents) -> 0.0,
+                       heuristic::Function=distance_heuristic(g),
+                       max_distance::W=typemax(W)
+                       )::Union{Nothing,Vector{T}} where {A <: AStar, U, T, W}
+    o_index = node_id_to_index(g, origin)
+    d_index = node_id_to_index(g, destination)
+    path = astar(A, g.graph, weights, o_index, d_index; cost_adjustment=cost_adjustment, heuristic=heuristic, max_distance=max_distance)
+    isnothing(path) && return
+    return index_to_node_id(g, path)
+end
+function shortest_path(::Type{A}, g::OSMGraph{U,T,W}, origin::Integer, destination::Integer; kwargs...)::Union{Nothing,Vector{T}} where {A <: PathAlgorithm, U, T, W}
+    return shortest_path(A, g, origin, destination, g.weights; kwargs...)
+end
+function shortest_path(::Type{A}, g::OSMGraph{U,T,W}, origin::Node{<:Integer}, destination::Node{<:Integer}, args...; kwargs...)::Union{Nothing,Vector{T}} where {A <: PathAlgorithm, U, T, W}
+    return shortest_path(A, g, origin.id, destination.id, args...; kwargs...)
+end
+function shortest_path(g::OSMGraph{U,T,W}, args...;  kwargs...)::Union{Nothing,Vector{T}} where {U, T, W}
+    return shortest_path(Dijkstra, g, args...; kwargs...)
+end
 
 """
     set_dijkstra_state!(g::OSMGraph, src::Union{Integer,Vecotr{<:Integer}, weights::AbstractMatrix; cost_adjustment::Function=(u, v, parents) -> 0.0)
@@ -99,7 +124,7 @@ function shortest_path_from_dijkstra_state(g::OSMGraph, origin::Integer, destina
 end 
 
 """
-    is_restricted(restriction_ll::MutableLinkedList{V}, u::U, v::U, parents::Vector{U})::Bool where {U <: Integer,V <: Integer}
+    is_restricted(restriction_ll::MutableLinkedList{V}, u::U, v::U, parents::P)::Bool where {P <: Union{<:AbstractVector{<:U}, <:AbstractDict{<:U, <:U}}} where {U <: Integer,V <: Integer}
 
 Given parents, returns `true` if path between `u` and `v` is restricted by the restriction linked list, `false` otherwise.
 
@@ -107,12 +132,12 @@ Given parents, returns `true` if path between `u` and `v` is restricted by the r
 - `restriction_ll::MutableLinkedList{V}`: Linked list holding vertices in order of v -> parents.
 - `u::U`: Current vertex visiting.
 - `v::U`: Current neighbour vertex.
-- `parents::Vector{U}`: Array of shortest path parents.
+- `parents::Union{<:AbstractVector{<:U}, <:AbstractDict{<:U, <:U}}`: Mapping of shortest path children to parents.
 
 # Return
 - `Bool`: Returns true if path between `u` and `v` is restricted.
 """
-function is_restricted(restriction_ll::MutableLinkedList{V}, u::U, v::U, parents::Vector{U})::Bool where {U <: Integer,V <: Integer}
+function is_restricted(restriction_ll::MutableLinkedList{V}, u::U, v::U, parents::P)::Bool where {P <: Union{<:AbstractVector{<:U}, <:AbstractDict{<:U, <:U}}} where {U <: Integer,V <: Integer}
     current = restriction_ll.node.next
 
     if v != current.data
@@ -125,7 +150,7 @@ function is_restricted(restriction_ll::MutableLinkedList{V}, u::U, v::U, parents
         current = current.next
 
         if u == current.data
-            u = parents[u]
+            u = get(parents, u, zero(U))
         else
             return false
         end
@@ -145,12 +170,12 @@ Given parents, returns `Inf64` if path between `u` and `v` is restricted by the 
 - `restrictions::AbstractDict{V,Vector{MutableLinkedList{V}}}`: Set of linked lists holding vertices in order of v -> parents.
 - `u::U`: Current vertex visiting.
 - `v::U`: Current neighbour vertex.
-- `parents::Vector{U}`: Array of shortest path parents.
+- `parents::Union{<:AbstractVector{<:U}, <:AbstractDict{<:U, <:U}}`: Mapping of shortest path children to parents.
 
 # Return
 - `Float64`: Returns `Inf64` if path between u and v is restricted, `0.0` otherwise.
 """
-function restriction_cost(restrictions::AbstractDict{V,Vector{MutableLinkedList{V}}}, u::U, v::U, parents::Vector{U})::Float64 where {U <: Integer,V <: Integer}
+function restriction_cost(restrictions::AbstractDict{V,Vector{MutableLinkedList{V}}}, u::U, v::U, parents::P)::Float64 where {P <: Union{<:AbstractVector{<:U}, <:AbstractDict{<:U, <:U}}} where {U <: Integer,V <: Integer}
     !haskey(restrictions, u) && return 0.0
 
     for ll in restrictions[u]
