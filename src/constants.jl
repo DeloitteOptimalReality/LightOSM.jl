@@ -1,4 +1,13 @@
 """
+Default data types used to construct OSMGraph object.
+"""
+const DEFAULT_OSM_ID_TYPE = Int64
+const DEFAULT_OSM_INDEX_TYPE = Int32
+const DEFAULT_OSM_EDGE_WEIGHT_TYPE = Float64
+const DEFAULT_OSM_MAXSPEED_TYPE = Int16
+const DEFAULT_OSM_LANES_TYPE = Int8
+
+"""
 Approximate radius of the Earth (km) used in geoemetry functions.
 """
 const RADIUS_OF_EARTH_KM = 6371.0
@@ -133,7 +142,7 @@ const OSM_DOWNLOAD_FORMAT = Dict(
 """
 Default maxspeed based on highway type. 
 """
-const DEFAULT_MAXSPEEDS = Dict(
+const DEFAULT_MAXSPEEDS = Ref(Dict{String,DEFAULT_OSM_MAXSPEED_TYPE}(
     "motorway" => 100,
     "trunk" => 100,
     "primary" => 100,
@@ -142,12 +151,12 @@ const DEFAULT_MAXSPEEDS = Dict(
     "unclassified" => 50,
     "residential" => 50,
     "other" => 50
-)
+))
 
 """
 Default number of lanes based on highway type. 
 """
-const DEFAULT_LANES = Dict(
+const DEFAULT_LANES = Ref(Dict{String,DEFAULT_OSM_LANES_TYPE}(
     "motorway" => 3,
     "trunk" => 3,
     "primary" => 2,
@@ -156,7 +165,7 @@ const DEFAULT_LANES = Dict(
     "unclassified" => 1,
     "residential" => 1,
     "other" => 1
-)
+))
 
 """
 Default oneway attribute based on highway type. 
@@ -186,33 +195,101 @@ const ONEWAY_FALSE = Set(["false", "no", "0", 0])
 """
 Default factor applied to maxspeed when the `lane_efficiency` weight is used to contruct OSMGraph object.
 """
-const LANE_EFFICIENCY = Dict(
+const LANE_EFFICIENCY = Ref(Dict{DEFAULT_OSM_LANES_TYPE,DEFAULT_OSM_EDGE_WEIGHT_TYPE}(
     1 => 0.7,
     2 => 0.8,
     3 => 0.9,
     4 => 1.0
-)
-
-"""
-Default data types used to construct OSMGraph object.
-"""
-const DEFAULT_OSM_ID_TYPE = Int64
-const DEFAULT_OSM_INDEX_TYPE = Int32
-const DEFAULT_OSM_EDGE_WEIGHT_TYPE = Float64
-const DEFAULT_OSM_MAXSPEED_TYPE = Int16
-const DEFAULT_OSM_LANES_TYPE = Int8
+))
 
 """
 Default height of buildings in metres.
 """
-const DEFAULT_BUILDING_HEIGHT_PER_LEVEL = 4
+const DEFAULT_BUILDING_HEIGHT_PER_LEVEL = Ref{Float64}(4)
 
 """
 Default maximum levels of buildings.
 """
-const DEFAULT_MAX_BUILDING_LEVELS = 3
+const DEFAULT_MAX_BUILDING_LEVELS = Ref{Int}(3)
 
 """
 Delimiters used to clean maxspeed and lanes data.
 """
 const COMMON_OSM_STRING_DELIMITERS = r"[+^:;,|-]"
+
+"""
+    LightOSM.set_defaults(kwargs...)
+
+Sets default values that LightOSM uses when generating the graph. All arguments are 
+optional.
+
+# Keyword Arguments
+- `maxspeeds::AbstractDict{String,<:Real}`: If no `maxspeed` way tag is available, these 
+    values are used instead based on the value of the `highway` way tag. If no 
+    `highway` way tag is available, the value for `"other"` is used. Unit is km/h. 
+    Default value: 
+    ```julia
+    Dict(
+        "motorway" => 100,
+        "trunk" => 100,
+        "primary" => 100,
+        "secondary" => 100,
+        "tertiary" => 50,
+        "unclassified" => 50,
+        "residential" => 50,
+        "other" => 50
+    )
+    ```
+- `lanes::AbstractDict{String,<:Integer}`: If no `lanes` way tag is available, these 
+    values are used instead based on the value of the `highway` way tag. If no 
+    `highway` way tag is available, the value for `"other"` is used. 
+    Default value: 
+    ```julia
+    Dict(
+        "motorway" => 3,
+        "trunk" => 3,
+        "primary" => 2,
+        "secondary" => 2,
+        "tertiary" => 1,
+        "unclassified" => 1,
+        "residential" => 1,
+        "other" => 1
+    )
+    ```
+- `lane_efficiency::AbstractDict{<:Integer,<:Real}`: Gives the lane efficiency based on 
+    number of lanes. `1.0` is used for any number of lanes not specified here.
+    Default value:
+    ```julia
+    LANE_EFFICIENCY = Dict(
+        1 => 0.7,
+        2 => 0.8,
+        3 => 0.9,
+        4 => 1.0
+    )
+    ```
+- `building_height_per_level::Integer`: If the `height` building tag is not available, 
+    it is calculated by multiplying this value by the number of levels from the 
+    `building:levels` tag. Unit is metres. Default value:
+    ```julia
+    4
+    ```
+- `max_building_levels::Integer`: If the `building:levels` tag is not available, a number 
+    is randomly chosen between 1 and this value. Default value:
+    ```julia
+    3
+    ```
+"""
+function set_defaults(;
+                      maxspeeds::AbstractDict{String,<:Real}=DEFAULT_MAXSPEEDS[],
+                      lanes::AbstractDict{String,<:Integer}=DEFAULT_LANES[],
+                      lane_efficiency::AbstractDict{<:Integer,<:Real}=LANE_EFFICIENCY[],
+                      building_height_per_level::Real=DEFAULT_BUILDING_HEIGHT_PER_LEVEL[],
+                      max_building_levels::Integer=DEFAULT_MAX_BUILDING_LEVELS[]
+                      )
+    DEFAULT_MAXSPEEDS[] = maxspeeds
+    DEFAULT_LANES[] = lanes
+    LANE_EFFICIENCY[] = lane_efficiency
+    DEFAULT_BUILDING_HEIGHT_PER_LEVEL[] = building_height_per_level
+    DEFAULT_MAX_BUILDING_LEVELS[] = max_building_levels
+    return
+end

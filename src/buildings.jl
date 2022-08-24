@@ -176,12 +176,12 @@ function height(tags::Dict)::Number
         return height isa String ? max([remove_non_numeric(h) for h in split(height, r"[+^;,-]")]...) : height
     elseif levels !== nothing
         levels = levels isa String ? round(max([remove_non_numeric(l) for l in split(levels, r"[+^;,-]")]...)) : levels
-        levels = levels == 0 ? rand(1:DEFAULT_MAX_BUILDING_LEVELS) : levels
+        levels = levels == 0 ? rand(1:DEFAULT_MAX_BUILDING_LEVELS[]) : levels
     else
-        levels = rand(1:DEFAULT_MAX_BUILDING_LEVELS)
+        levels = rand(1:DEFAULT_MAX_BUILDING_LEVELS[])
     end
 
-    return levels * DEFAULT_BUILDING_HEIGHT_PER_LEVEL
+    return levels * DEFAULT_BUILDING_HEIGHT_PER_LEVEL[]
 end
 
 function parse_osm_buildings_dict(osm_buildings_dict::AbstractDict)::Dict{Integer,Building}
