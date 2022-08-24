@@ -1,4 +1,4 @@
-# [`Graph Utilities`](@ref) Methods
+# Graph Utilities
 
 ```@docs
 index_to_node_id

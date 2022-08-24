@@ -213,3 +213,51 @@ function bounding_box_from_point(point::GeoLocation, radius::Number)::NamedTuple
     bottom_left, top_right = calculate_location([point, point], [225, 45], [radius, radius])
     return (minlat = bottom_left.lat, minlon = bottom_left.lon, maxlat = top_right.lat, maxlon = top_right.lon)
 end
+
+"""
+    nearest_point_on_line(x1::T, 
+                          y1::T, 
+                          x2::T, 
+                          y2::T, 
+                          x::T, 
+                          y::T
+                          )::Tuple{T,T,T} where {T <: AbstractFloat}
+
+Finds the nearest position along a straight line to a given point.
+
+# Arguments
+- `x1::T`, `y1::T`: Starting point of the line.
+- `x2::T`, `y2::T`: Ending point of the line.
+- `x::T`, `y::T`: Point to nearest position to.
+
+# Returns
+- `::Tuple`:
+  - `::T`: x-coordinate of nearest position.
+  - `::T`: y-coordinate of nearest position.
+  - `::T`: Position along the line, from 0 to 1.
+"""
+function nearest_point_on_line(x1::T, 
+                               y1::T, 
+                               x2::T, 
+                               y2::T, 
+                               x::T, 
+                               y::T
+                               )::Tuple{T,T,T} where {T <: AbstractFloat}
+    A = x - x1
+    B = y - y1
+    C = x2 - x1
+    D = y2 - y1
+    dot = A * C + B * D
+    len_sq = C * C + D * D
+    param = -one(T)
+    if len_sq != 0 # in case of 0 length line
+        param = dot / len_sq
+    end
+    if param < 0.0
+        return (x1, y1, zero(T))
+    elseif param > 1.0
+        return (x2, y2, one(T))
+    else
+        return (x1 + param * C, y1 + param * D, param)
+    end
+end

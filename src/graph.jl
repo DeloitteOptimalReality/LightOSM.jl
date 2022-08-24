@@ -55,7 +55,7 @@ function graph_from_object(osm_data_object::Union{XMLDocument,Dict};
         g.dijkstra_states = Vector{Vector{U}}(undef, length(g.nodes))
     end
 
-    add_kdtree!(g)
+    add_kdtree_and_rtree!(g)
     @info "Created OSMGraph object with kwargs: network_type=$network_type, weight_type=$weight_type, graph_type=$graph_type, precompute_dijkstra_states=$precompute_dijkstra_states, largest_connected_component=$largest_connected_component"
     return g
 end
@@ -455,14 +455,74 @@ function add_dijkstra_states!(g::OSMGraph{U,T,W}) where {U <: Integer,T <: Integ
 end
 
 """
+    get_cartesian_locations(g::OSMGraph)
+
+Calculates the Cartesian location of all nodes in the graph.
+
+Returns a 3-by-n matrix where each column is the `xyz` coordinates of a node. Column indices 
+correspond to the `g.graph` vertex indices.
+"""
+function get_cartesian_locations(g::OSMGraph)
+    node_locations = [index_to_node(g, index).location for index in 1:nv(g.graph)]
+    return to_cartesian(node_locations)
+end
+
+"""
+    add_kdtree_and_rtree!(g::OSMGraph)
+
+Adds k-d tree and R-tree to `OSMGraph` for finding nearest nodes and ways.
+"""
+function add_kdtree_and_rtree!(g::OSMGraph)
+    cartesian_locations = get_cartesian_locations(g)
+    add_kdtree!(g, cartesian_locations)
+    add_rtree!(g, cartesian_locations)
+end
+
+"""
     add_kdtree!(g::OSMGraph)
+    add_kdtree!(g::OSMGraph, cartesian_locations::Matrix{Float64})
 
 Adds KDTree to `OSMGraph` for finding nearest neighbours.
 """
-function add_kdtree!(g::OSMGraph)
-    node_locations = [node.location for (id, node) in g.nodes]  # node locations must have the same order as node indices
-    cartesian_locations = to_cartesian(node_locations)
+function add_kdtree!(g::OSMGraph, cartesian_locations::Matrix{Float64})
     g.kdtree = KDTree(cartesian_locations)
+end
+function add_kdtree!(g::OSMGraph)
+    cartesian_locations = get_cartesian_locations(g)
+    add_kdtree!(g, cartesian_locations)
+end
+
+""" 
+    add_rtree!(g::OSMGraph)
+    add_rtree!(g::OSMGraph, cartesian_locations::Matrix{Float64})
+
+Adds an R-tree to `OSMGraph` for finding nearest ways.
+
+# Warning
+Make sure to suppress outputs! 
+Behaviour as of SpatialIndexing.jl 0.1.3 will print a line for every single OSM way, which 
+will flood the terminal if not suppressed. Use with caution for now.
+"""
+function add_rtree!(g::OSMGraph{U,T,W}, cartesian_locations::Matrix{Float64}) where {U,T,W}
+    # Get bounding box for every way ID
+    way_ids = collect(keys(g.ways))
+    data = map(way_ids) do way_id
+        node_indices = node_id_to_index(g, g.ways[way_id].nodes)
+        x = [cartesian_locations[1,i] for i in node_indices]
+        y = [cartesian_locations[2,i] for i in node_indices]
+        z = [cartesian_locations[3,i] for i in node_indices]
+        min_pt = (minimum(x), minimum(y), minimum(z))
+        max_pt = (maximum(x), maximum(y), maximum(z))
+        return SpatialElem(SpatialIndexing.Rect(min_pt, max_pt), way_id, nothing)
+    end
+
+    tree = RTree{Float64,3}(T, Nothing)
+    SpatialIndexing.load!(tree, data)
+    g.rtree = tree
+end
+function add_rtree!(g::OSMGraph)
+    cartesian_locations = get_cartesian_locations(g)
+    add_rtree!(g, cartesian_locations)
 end
 
 """

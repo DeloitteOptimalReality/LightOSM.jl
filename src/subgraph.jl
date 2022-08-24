@@ -47,7 +47,11 @@ function osm_subgraph(g::OSMGraph{U, T, W},
         osg.dijkstra_states = Vector{Vector{U}}(undef, length(osg.nodes))
     end
 
-    !isnothing(g.kdtree) && add_kdtree!(osg)
+    if !isnothing(g.kdtree) || !isnothing(g.rtree)
+        cartesian_locations = get_cartesian_locations(g)
+        !isnothing(g.kdtree) && add_kdtree!(osg, cartesian_locations)
+        !isnothing(g.rtree) && add_rtree!(osg, cartesian_locations)
+    end
 
     return osg
 end

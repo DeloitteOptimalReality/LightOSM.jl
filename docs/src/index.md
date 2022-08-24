@@ -11,10 +11,11 @@ Pages = [
     "create_graph.md",
     "shortest_path.md",
     "nearest_node.md",
+    "nearest_way.md",
     "download_buildings.md",
     "create_buildings.md",
-    "geolocation.md"
-    "graph_utilities.md"
+    "geolocation.md",
+    "graph_utilities.md",
     "defaults.md"
 ]
 ```

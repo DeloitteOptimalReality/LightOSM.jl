@@ -67,3 +67,33 @@ end
     node_b = Node(1, b, Dict{String, Any}())
     @test calculate_location([a, b], [heading_a, heading_b], [dist_a, dist_b]) == calculate_location([node_a, node_b], [heading_a, heading_b], [dist_a, dist_b])
 end
+
+@testset "nearest_point_on_line tests" begin
+    # Matching middle of line
+    x, y, pos = LightOSM.nearest_point_on_line(
+        1.0, 1.0,
+        2.0, 2.0,
+        2.0, 1.0
+    )
+    @test x ≈ 1.5
+    @test y ≈ 1.5
+    @test pos ≈ 0.5
+    # Matching start of line
+    x, y, pos = LightOSM.nearest_point_on_line(
+        1.0, 1.0,
+        2.0, 2.0,
+        0.0, 1.0
+    )
+    @test x ≈ 1.0
+    @test y ≈ 1.0
+    @test pos ≈ 0.0
+    # Matching end of line
+    x, y, pos = LightOSM.nearest_point_on_line(
+        1.0, 1.0,
+        2.0, 2.0,
+        3.0, 4.0
+    )
+    @test x ≈ 2.0
+    @test y ≈ 2.0
+    @test pos ≈ 1.0
+end
