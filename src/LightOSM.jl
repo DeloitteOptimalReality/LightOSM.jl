@@ -14,11 +14,13 @@ using HTTP
 using JSON
 using LightXML
 using StaticArrays
+using SpatialIndexing
 
 export GeoLocation,
        OSMGraph,
        Node,
        Way,
+       EdgePoint,
        Restriction,
        Building,
        PathAlgorithm,
@@ -46,6 +48,9 @@ export GeoLocation,
        path_from_parents,
        nearest_node,
        nearest_nodes,
+       nearest_way,
+       nearest_ways,
+       nearest_point_on_way,
        download_osm_buildings,
        buildings_from_object,
        buildings_from_download,
@@ -75,6 +80,7 @@ include("graph_utilities.jl")
 include("traversal.jl")
 include("shortest_path.jl")
 include("nearest_node.jl")
+include("nearest_way.jl")
 include("buildings.jl")
 include("subgraph.jl")
 

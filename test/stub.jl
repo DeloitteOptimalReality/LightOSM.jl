@@ -69,7 +69,7 @@ function basic_osm_graph_stub(weight_type=:distance, graph_type=:static)
     LightOSM.add_node_tags!(g)
     LightOSM.add_indexed_restrictions!(g)
     g.dijkstra_states = Vector{Vector{U}}(undef, length(g.nodes))
-    LightOSM.add_kdtree!(g)
+    LightOSM.add_kdtree_and_rtree!(g)
     return g
 end
 

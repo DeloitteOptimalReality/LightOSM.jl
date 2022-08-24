@@ -5,7 +5,7 @@ Representation of a geospatial coordinates.
 - `lon::Float64`: Longitude.
 - `alt::Float64`: Altitude.
 """
-@with_kw struct GeoLocation
+@with_kw_noshow struct GeoLocation
     lat::Float64
     lon::Float64
     alt::Float64 = 0.0
@@ -57,6 +57,22 @@ end
 Way(id::T, nodes, tags::Dict{String, Any}) where T <: Integer = Way(id, convert(Vector{T}, nodes), tags)
 
 """
+    EdgePoint{T<:Integer}
+
+A point along the edge between two OSM nodes.
+
+# Fields
+- `n1::T`: First node of edge.
+- `n2::T`: Second node of edge.
+- `pos::Float64`: Position from `n1` to `n2`, from 0 to 1.
+"""
+struct EdgePoint{T<:Integer}
+    n1::T
+    n2::T
+    pos::Float64
+end
+
+"""
 OpenStreetMap turn restriction (relation).
 
 `T<:Integer`
@@ -99,6 +115,7 @@ Container for storing OpenStreetMap node, way, relation and graph related obejct
 - `weights::Union{SparseMatrixCSC{W,U},Nothing}`: Sparse adjacency matrix (weights between graph vertices), either `:distance` (km), `:time` (hours) or `:lane_efficiency` (time scaled by number of lanes).
 - `dijkstra_states::Vector{Vector{U}}`: Vector of dijkstra parent states indexed by source vertices, used to retrieve shortest path from source vertex to any other vertex.
 - `kdtree::Union{KDTree,Nothing}`: KDTree used to calculate nearest nodes.
+- `kdtree::Union{RTree,Nothing}`: R-tree used to calculate nearest nodes.
 - `weight_type::Union{Symbol,Nothing}`: Either `:distance`, `:time` or `:lane_efficiency`.
 """
 @with_kw mutable struct OSMGraph{U <: Integer,T <: Integer,W <: Real}
@@ -114,7 +131,8 @@ Container for storing OpenStreetMap node, way, relation and graph related obejct
     graph::Union{AbstractGraph,Nothing} = nothing
     weights::Union{SparseMatrixCSC{W,U},Nothing} = nothing
     dijkstra_states::Union{Vector{Vector{U}},Nothing} = nothing
-    kdtree::Union{KDTree{StaticArrays.SVector{3, W}, Euclidean, W}, Nothing} = nothing
+    kdtree::Union{KDTree{StaticArrays.SVector{3, W},Euclidean,W},Nothing} = nothing
+    rtree::Union{RTree{Float64,3,SpatialElem{Float64,3,T,Nothing}},Nothing} = nothing
     weight_type::Union{Symbol,Nothing} = nothing
 end
 
