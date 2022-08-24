@@ -8,6 +8,8 @@ using Test
 
 include("stub.jl")
 
+const TEST_OSM_URL = "https://raw.githubusercontent.com/captchanjack/LightOSMFiles.jl/main/maps/south-yarra.json"
+
 @testset "LightOSM Tests" begin
     @testset "Constants" begin include("constants.jl") end
     @testset "Utilities" begin include("utilities.jl") end

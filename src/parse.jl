@@ -29,8 +29,8 @@ function maxspeed(tags::AbstractDict)::DEFAULT_OSM_MAXSPEED_TYPE
         end
     else
         highway_type = get(tags, "highway", "other")
-        key = getkey(DEFAULT_MAXSPEEDS, highway_type, "other")
-        return U(DEFAULT_MAXSPEEDS[key])
+        key = getkey(DEFAULT_MAXSPEEDS[], highway_type, "other")
+        return U(DEFAULT_MAXSPEEDS[][key])
     end
 end
 
@@ -55,8 +55,8 @@ function lanes(tags::AbstractDict)::DEFAULT_OSM_LANES_TYPE
         end
     else
         highway_type = get(tags, "highway", "other")
-        key = getkey(DEFAULT_LANES, highway_type, "other")
-        return U(DEFAULT_LANES[key])
+        key = getkey(DEFAULT_LANES[], highway_type, "other")
+        return U(DEFAULT_LANES[][key])
     end
 end
 
@@ -217,12 +217,12 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict, network_type::Sy
                 id = way["id"]
                 ways[id] = Way(id, nds, tags)
             elseif is_railway(tags) && matches_network_type(tags, network_type)
-                tags["rail_type"] = haskey(tags,"railway") ? tags["railway"] : "unknown"
-                tags["electrified"] = haskey(tags,"electrified") ? tags["electrified"] : "unknown"
-                tags["gauge"] = haskey(tags,"gauge") ? tags["gauge"] : nothing
-                tags["usage"] = haskey(tags,"usage") ? tags["usage"] :  "unknown"
-                tags["name"] = haskey(tags,"name") ? tags["name"] : "unknown"
-                tags["lanes"] = haskey(tags,"tracks") ? tags["tracks"] : 1
+                tags["rail_type"] = get(tags, "railway", "unknown")
+                tags["electrified"] = get(tags, "electrified", "unknown")
+                tags["gauge"] = get(tags, "gauge", nothing)
+                tags["usage"] = get(tags, "usage",  "unknown")
+                tags["name"] = get(tags, "name", "unknown")
+                tags["lanes"] = get(tags, "tracks", 1)
                 tags["maxspeed"] = maxspeed(tags)
                 tags["oneway"] = is_oneway(tags)
                 tags["reverseway"] = is_reverseway(tags)

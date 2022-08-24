@@ -66,7 +66,7 @@ for T in (AStar, AStarVector, AStarDict)
 end
 
 # download graph, pick random nodes and test dijkstra and astar equality
-data = HTTP.get("https://raw.githubusercontent.com/captchanjack/LightOSMFiles.jl/main/maps/south-yarra.json")
+data = HTTP.get(TEST_OSM_URL)
 data = JSON.parse(String(data.body))
 
 # distance weights

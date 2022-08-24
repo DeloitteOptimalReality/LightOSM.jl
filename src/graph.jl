@@ -7,18 +7,30 @@
                       largest_connected_component::Bool=true
                       )::OSMGraph
 
-Creates an `OSMGraph` object from download OpenStreetMap network data, use with `download_osm_network`.
+Creates an `OSMGraph` object from download OpenStreetMap network data, use with 
+`download_osm_network`.
 
 # Arguments
-- `osm_data_object::Symbol`: OpenStreetMap network data parsed as either XML or Dictionary object depending on the download method.
-- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, `:walk`, `:bike`, `:all`, `:all_private`, `:none`, `:rail`, must match the network type used to download `osm_data_object`.
-- `weight_type::Symbol=:time`: Weight type for graph edges, pick from `:distance` (km), `:time` (hours), `:lane_efficiency` (time scaled by number of lanes). 
-- `graph_type::Symbol=:static`: Type of `Graphs.AbstractGraph`, pick from `:static` (StaticDiGraph), `:light` (DiGraph), `:simple_weighted` (SimpleWeightedDiGraph), `:meta` (MetaDiGraph).
-- `precompute_dijkstra_states::Bool=false`: Set true to precompute dijkstra parent states for every source node in the graph, *NOTE* this may take a while and may not be possible for graphs with large amount of nodes due to memory limits.
-- `largest_connected_component::Bool=true`: Set true to keep only the largest connected components in the network.
+- `osm_data_object::Union{XMLDocument,Dict}`: OpenStreetMap network data parsed as either 
+    `XMLDocument` or `Dict` object depending on the download method. *NOTE* if you pass in 
+    a `Dict`, the object will be modified to add missing tag information.
+- `network_type::Symbol=:drive`: Network type filter, pick from `:drive`, `:drive_service`, 
+    `:walk`, `:bike`, `:all`, `:all_private`, `:none`, `:rail`, must match the network type 
+    used to download `osm_data_object`.
+- `weight_type::Symbol=:time`: Weight type for graph edges, pick from `:distance` (km), 
+    `:time` (hours), `:lane_efficiency` (time scaled by number of lanes). 
+- `graph_type::Symbol=:static`: Type of `Graphs.AbstractGraph`, pick from `:static` 
+    (`StaticDiGraph`), `:light` (`DiGraph`), `:simple_weighted` (`SimpleWeightedDiGraph`), 
+    `:meta` (`MetaDiGraph`).
+- `precompute_dijkstra_states::Bool=false`: Set true to precompute Dijkstra parent states 
+    for every source node in the graph, *NOTE* this may take a while and may not be 
+    possible for graphs with large amount of nodes due to memory limits.
+- `largest_connected_component::Bool=true`: Set true to keep only the largest connected 
+    components in the network.
 
 # Return
-- `OSMGraph`: Container for storing OpenStreetMap node, way, relation and graph related obejcts.
+- `OSMGraph`: Container for storing OpenStreetMap node-, way-, relation- and graph-related 
+    obejcts.
 """
 function graph_from_object(osm_data_object::Union{XMLDocument,Dict};
                            network_type::Symbol=:drive,
@@ -353,7 +365,7 @@ function add_weights!(g::OSMGraph, weight_type::Symbol=:distance)
                 weight = dist / maxspeed
             else
                 lanes = g.ways[highway].tags["lanes"]::DEFAULT_OSM_LANES_TYPE
-                lane_efficiency = get(LANE_EFFICIENCY, lanes, 1.0)
+                lane_efficiency = get(LANE_EFFICIENCY[], lanes, 1.0)
                 weight = dist / (maxspeed * lane_efficiency)
             end
         else
