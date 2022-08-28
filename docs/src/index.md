@@ -13,8 +13,8 @@ Pages = [
     "nearest_node.md",
     "download_buildings.md",
     "create_buildings.md",
-    "geolocation.md"
-    "graph_utilities.md"
+    "geolocation.md",
+    "graph_utilities.md",
     "defaults.md"
 ]
 ```

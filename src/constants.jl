@@ -228,7 +228,7 @@ optional.
     values are used instead based on the value of the `highway` way tag. If no 
     `highway` way tag is available, the value for `"other"` is used. Unit is km/h. 
     Default value: 
-    ```julia
+    ```
     Dict(
         "motorway" => 100,
         "trunk" => 100,
@@ -244,7 +244,7 @@ optional.
     values are used instead based on the value of the `highway` way tag. If no 
     `highway` way tag is available, the value for `"other"` is used. 
     Default value: 
-    ```julia
+    ```
     Dict(
         "motorway" => 3,
         "trunk" => 3,
@@ -259,7 +259,7 @@ optional.
 - `lane_efficiency::AbstractDict{<:Integer,<:Real}`: Gives the lane efficiency based on 
     number of lanes. `1.0` is used for any number of lanes not specified here.
     Default value:
-    ```julia
+    ```
     LANE_EFFICIENCY = Dict(
         1 => 0.7,
         2 => 0.8,
@@ -270,12 +270,12 @@ optional.
 - `building_height_per_level::Integer`: If the `height` building tag is not available, 
     it is calculated by multiplying this value by the number of levels from the 
     `building:levels` tag. Unit is metres. Default value:
-    ```julia
+    ```
     4
     ```
 - `max_building_levels::Integer`: If the `building:levels` tag is not available, a number 
     is randomly chosen between 1 and this value. Default value:
-    ```julia
+    ```
     3
     ```
 """
