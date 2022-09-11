@@ -1,4 +1,4 @@
-# Nearest Node
+# Nearest Way
 
 ```@docs
 nearest_way
