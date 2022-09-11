@@ -148,14 +148,14 @@ function astar(g::AbstractGraph{U},
 end
 
 """
-dijkstra([::Type{<:Dijkstra},]
-         g::AbstractGraph{U},
-         weights::AbstractMatrix{T},
-         src::W,
-         goal::W;
-         cost_adjustment::Function=(u, v, parents) -> 0.0,
-         max_distance::T=typemax(T)
-         ) where {T <: Real, U <: Integer, W <: Integer}
+    dijkstra([::Type{<:Dijkstra},]
+            g::AbstractGraph{U},
+            weights::AbstractMatrix{T},
+            src::W,
+            goal::W;
+            cost_adjustment::Function=(u, v, parents) -> 0.0,
+            max_distance::T=typemax(T)
+            ) where {T <: Real, U <: Integer, W <: Integer}
 
 Dijkstra's shortest path algorithm with an early exit condition, is the same as 
 astar with heuristic cost as 0.
