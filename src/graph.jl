@@ -215,7 +215,10 @@ function add_node_and_edge_mappings!(g::OSMGraph{U,T,W}) where {U <: Integer,T <
             end                
         end
     end
-
+    
+    # remove duplicates
+    g.node_to_way = Dict{T, Vector{T}}(key => collect(Set(value)) for (key, value) in g.node_to_way)
+    
     @assert(length(g.nodes) == length(g.node_to_way), "Data quality issue: number of graph nodes ($(length(g.nodes::Dict{T,Node{T}}))) not equal to set of nodes extracted from ways ($(length(g.node_to_way)))")
     g.node_to_index = OrderedDict{T,U}(n => i for (i, n) in enumerate(collect(keys(g.nodes))))
     g.index_to_node = OrderedDict{U,T}(i => n for (n, i) in g.node_to_index)
