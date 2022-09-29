@@ -24,12 +24,12 @@ Another honourable mention goes to an existing Julia package **[OpenStreetMapX.j
 
 ## Documentation
 
-Documentation for the API can be found **[here](https://deloittedigitalapac.github.io/LightOSM.jl/docs)**.
+Documentation for the API can be found **[here](https://deloitteoptimalreality.github.io/LightOSM.jl/docs)**.
 
 ## Usage
 
-A comprehensive tutorial can be found found **[here](https://deloittedigitalapac.github.io/LightOSM.jl/notebooks/tutorial)**.
+A comprehensive tutorial can be found found **[here](https://deloitteoptimalreality.github.io/LightOSM.jl/notebooks/tutorial)**.
 
 ## Benchmarks
 
-Benchmark comparison for shortest path algorithms can be found **[here](https://deloittedigitalapac.github.io/LightOSM.jl/notebooks/benchmarks)**.
+Benchmark comparison for shortest path algorithms can be found **[here](https://deloitteoptimalreality.github.io/LightOSM.jl/notebooks/benchmarks)**.
