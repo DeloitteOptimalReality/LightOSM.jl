@@ -69,6 +69,98 @@ function basic_osm_graph_stub(weight_type=:distance, graph_type=:static)
     LightOSM.add_node_tags!(g)
     LightOSM.add_indexed_restrictions!(g)
     g.dijkstra_states = Vector{Vector{U}}(undef, length(g.nodes))
-    LightOSM.add_kdtree!(g)
+    LightOSM.add_kdtree_and_rtree!(g)
     return g
+end
+
+"""
+    stub_graph1()
+
+Returns a directed graph object (DiGraph). Nodes represented by circles, edge distances (weights) represented by numbers along the lines.
+
+Shortest path from ① to ⑤ = ① → ④ → ⑤
+Shotest distance from ① to ⑤ = 3
+
+```ascii
+                  
+①─┐2─→②──4─┐    
+│  └┐  ↑     ↓ 
+1   1─┐1     ⑤
+↓      ↓     ↑  
+③──2─→④──2─┘ 
+
+⋅  2  1  1  ⋅
+⋅  ⋅  ⋅  1  4
+⋅  ⋅  ⋅  2  ⋅
+⋅  1  ⋅  ⋅  2
+⋅  ⋅  ⋅  ⋅  ⋅
+```
+"""
+function stub_graph1()
+    weights = sparse(
+        [1, 1, 1, 2, 4, 3, 2, 4], # origin
+        [2, 3, 4, 4, 2, 4, 5, 5], # destination 
+        [2, 1, 1, 1, 1, 2, 4, 2], # weights
+        5,                        # n nodes
+        5                         # n nodes
+    )
+    return DiGraph(weights), weights
+end
+
+"""
+    stub_graph2()
+
+Returns a directed graph object (DiGraph).
+
+Shortest path from ① to ⑥ = ① → ④ -> ⑦ -> ⑥
+Shotest distance from ① to ⑥ = 6
+
+```ascii
+
+⋅  2  ⋅  1   ⋅  ⋅  ⋅
+⋅  ⋅  ⋅  3  10  ⋅  ⋅
+4  ⋅  ⋅  ⋅   ⋅  5  ⋅
+⋅  ⋅  2  ⋅   2  8  4
+⋅  ⋅  ⋅  ⋅   ⋅  ⋅  6
+⋅  ⋅  ⋅  ⋅   ⋅  ⋅  ⋅
+⋅  ⋅  ⋅  ⋅   ⋅  1  ⋅
+```
+"""
+function stub_graph2()
+    weights = sparse(
+        [1, 1, 2, 2, 3, 3, 4, 4, 4, 4, 5, 7],  # origin
+        [2, 4, 4, 5, 1, 6, 3, 5, 6, 7, 7, 6],  # destination 
+        [2, 1, 3, 10, 4, 5, 2, 2, 8, 4, 6, 1], # weights
+        7,                                     # n nodes
+        7                                      # n nodes
+    )
+    return DiGraph(weights), weights
+end
+
+"""
+    stub_graph3()
+
+Returns a directed graph object (DiGraph).
+
+Shortest path from ① to ③ = ① → ④ -> ② -> ③
+Shotest distance from ① to ③ = 9
+
+```ascii
+
+⋅  10  ⋅  5  ⋅
+⋅   ⋅  1  2  ⋅
+⋅   ⋅  ⋅  ⋅  4
+⋅   3  9  ⋅  2
+7   ⋅  6  ⋅  ⋅
+```
+"""
+function stub_graph3()
+    weights = sparse(
+        [1, 1, 2, 2, 3, 4, 4, 4, 5, 5],  # origin
+        [2, 4, 3, 4, 5, 2, 3, 5, 1, 3],  # destination 
+        [10, 5, 1, 2, 4, 3, 9, 2, 7, 6], # weights
+        5,                               # n nodes
+        5                                # n nodes
+    )
+    return DiGraph(weights), weights
 end
