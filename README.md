@@ -2,15 +2,15 @@
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://deloittedigitalapac.github.io/LightOSM.jl/docs/)
 [![Tutorial](https://img.shields.io/badge/docs-tutorial-informational.svg)](https://deloittedigitalapac.github.io/LightOSM.jl/notebooks/tutorial)
-[![Build Status](https://github.com/DeloitteDigitalAPAC/LightOSM.jl/workflows/CI/badge.svg?branch=master)](https://github.com/DeloitteDigitalAPAC/LightOSM.jl/actions?query=workflow%3ACI+branch%3Amaster)
-[![Codecov](https://codecov.io/gh/DeloitteDigitalAPAC/LightOSM.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/DeloitteDigitalAPAC/LightOSM.jl)
+[![Build Status](https://github.com/DeloitteOptimalReality/LightOSM.jl/workflows/CI/badge.svg?branch=master)](https://github.com/DeloitteOptimalReality/LightOSM.jl/actions?query=workflow%3ACI+branch%3Amaster)
+[![Codecov](https://codecov.io/gh/DeloitteOptimalReality/LightOSM.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/DeloitteOptimalReality/LightOSM.jl)
 
 
-**[`LightOSM.jl`](https://github.com/DeloitteDigitalAPAC/LightOSM.jl)** is **[Julia](https://julialang.org/)** package for downloading and analysing geospatial data from **[OpenStreetMap](https://wiki.openstreetmap.org/wiki/Main_Page)** APIs (**[Nominatim](https://nominatim.openstreetmap.org/ui/search.html)** and **[Overpass](https://overpass-api.de)**), such as nodes, ways, relations and building polygons.
+**[`LightOSM.jl`](https://github.com/DeloitteOptimalReality/LightOSM.jl)** is **[Julia](https://julialang.org/)** package for downloading and analysing geospatial data from **[OpenStreetMap](https://wiki.openstreetmap.org/wiki/Main_Page)** APIs (**[Nominatim](https://nominatim.openstreetmap.org/ui/search.html)** and **[Overpass](https://overpass-api.de)**), such as nodes, ways, relations and building polygons.
 
 ## Acknowledgements
 
-**[`LightOSM.jl`](https://github.com/DeloitteDigitalAPAC/LightOSM.jl)** is inspired by the Python package **[OSMnx](https://github.com/gboeing/osmnx)** for its interface and Overpass query logic. Graph analysis algorithms (connected components and shortest path) are based on **[LightGraphs.jl](https://github.com/JuliaGraphs/LightGraphs.jl)** implementation, but adapted to account for turn restrictions and improve runtime performance.
+**[`LightOSM.jl`](https://github.com/DeloitteOptimalReality/LightOSM.jl)** is inspired by the Python package **[OSMnx](https://github.com/gboeing/osmnx)** for its interface and Overpass query logic. Graph analysis algorithms (connected components and shortest path) are based on **[LightGraphs.jl](https://github.com/JuliaGraphs/LightGraphs.jl)** implementation, but adapted to account for turn restrictions and improve runtime performance.
 
 Another honourable mention goes to an existing Julia package **[OpenStreetMapX.jl](https://github.com/pszufe/OpenStreetMapX.jl)** as many learnings were taken to improve parsing of raw OpenStreetMap data.
 
