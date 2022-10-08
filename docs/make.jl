@@ -21,7 +21,7 @@ makedocs(
 )
 
 deploydocs(
-    repo="github.com/DeloitteDigitalAPAC/LightOSM.jl.git",
+    repo="github.com/DeloitteOptimalReality/LightOSM.jl.git",
     devurl="docs",
     push_preview=true,
 )
