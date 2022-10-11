@@ -1,7 +1,7 @@
 # LightOSM.jl
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://deloittedigitalapac.github.io/LightOSM.jl/docs/)
-[![Tutorial](https://img.shields.io/badge/docs-tutorial-informational.svg)](https://deloittedigitalapac.github.io/LightOSM.jl/notebooks/tutorial)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://deloitteoptimalreality.github.io/LightOSM.jl/docs/)
+[![Tutorial](https://img.shields.io/badge/docs-tutorial-informational.svg)](https://deloitteoptimalreality.github.io/LightOSM.jl/notebooks/tutorial)
 [![Build Status](https://github.com/DeloitteOptimalReality/LightOSM.jl/workflows/CI/badge.svg?branch=master)](https://github.com/DeloitteOptimalReality/LightOSM.jl/actions?query=workflow%3ACI+branch%3Amaster)
 [![Codecov](https://codecov.io/gh/DeloitteOptimalReality/LightOSM.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/DeloitteOptimalReality/LightOSM.jl)
 
