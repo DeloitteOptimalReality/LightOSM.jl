@@ -1,6 +1,7 @@
 name = "LightOSM"
 uuid = "d1922b25-af4e-4ba3-84af-fe9bea896051"
 authors = ["Jack Chan <jchan2@deloitte.com.au>"]
+repo = "https://github.com/DeloitteOptimalReality/LightOSM.jl.git"
 version = "0.2.7"
 
 [deps]
