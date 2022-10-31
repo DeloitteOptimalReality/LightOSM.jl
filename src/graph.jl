@@ -453,7 +453,7 @@ consider adding in the future.
 """
 function add_dijkstra_states!(g::OSMGraph{U,T,W}) where {U <: Integer,T <: Integer,W <: Real}
     @warn "Precomputing all dijkstra states is a O(V² + ElogV) operation, may not be possible for larger graphs."
-    g.dijkstra_states = Vector{Vector{U}}(undef, n)
+    g.dijkstra_states = Vector{Vector{U}}(undef, length(g.nodes))
     set_dijkstra_state!(g, collect(vertices(g.graph)))
 end
 
