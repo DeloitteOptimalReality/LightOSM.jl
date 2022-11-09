@@ -367,7 +367,22 @@ function add_weights!(g::OSMGraph, weight_type::Symbol=:distance)
             if weight_type == :time
                 weight = dist / maxspeed
             else
-                lanes = g.ways[highway].tags["lanes"]::DEFAULT_OSM_LANES_TYPE
+                if g.ways[highway].tags["oneway"]::Bool
+                    lanes = g.ways[highway].tags["lanes"]::DEFAULT_OSM_LANES_TYPE
+                else
+                    nodes = g.ways[highway].nodes
+                    source_indices = findall(==(edge[1]), nodes)
+                    if nodes[1] == nodes[end]
+                        dest_indices = mod1.(source_indices.+1, length(nodes))
+                    else
+                        dest_indices = [i+1 for i in source_indices if i < length(nodes)]
+                    end
+                    if edge[2] in nodes[dest_indices]
+                        lanes = g.ways[highway].tags["lanes:forward"]
+                    else
+                        lanes = g.ways[highway].tags["lanes:backward"]
+                    end
+                end
                 lane_efficiency = get(LANE_EFFICIENCY[], lanes, 1.0)
                 weight = dist / (maxspeed * lane_efficiency)
             end
