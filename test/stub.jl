@@ -40,10 +40,10 @@ function basic_osm_graph_stub(weight_type=:distance, graph_type=:static)
         [1008, 1007],
     ]
     tag_dicts = [
-        Dict{String, Any}("oneway" => false, "reverseway" => false, "maxspeed" => Int16(50),  "lanes" => Int8(2)),
-        Dict{String, Any}("oneway" => false, "reverseway" => false, "maxspeed" => Int16(100), "lanes" => Int8(4)),
-        Dict{String, Any}("oneway" => false, "reverseway" => false, "maxspeed" => Int16(50),  "lanes" => Int8(2)),
-        Dict{String, Any}("oneway" => true,  "reverseway" => false, "maxspeed" => Int16(50),  "lanes" => Int8(1)),
+        Dict{String, Any}("oneway" => false, "reverseway" => false, "maxspeed" => Int16(50),  "lanes" => Int8(2), "lanes:forward"=>Int8(2), "lanes:backward"=>Int8(2), "lanes:both_ways"=>Int8(0)),
+        Dict{String, Any}("oneway" => false, "reverseway" => false, "maxspeed" => Int16(100), "lanes" => Int8(4), "lanes:forward"=>Int8(3), "lanes:backward"=>Int8(3), "lanes:both_ways"=>Int8(2)),
+        Dict{String, Any}("oneway" => false, "reverseway" => false, "maxspeed" => Int16(50),  "lanes" => Int8(2), "lanes:forward"=>Int8(3), "lanes:backward"=>Int8(1), "lanes:both_ways"=>Int8(0)),
+        Dict{String, Any}("oneway" => true,  "reverseway" => false, "maxspeed" => Int16(50),  "lanes" => Int8(1), "lanes:forward"=>Int8(1), "lanes:backward"=>Int8(0), "lanes:both_ways"=>Int8(0)),
     ]
     ways = Dict(way_id => Way(way_id, nodes, tag_dict) for (way_id, nodes, tag_dict) in zip(way_ids, way_nodes, tag_dicts))
 

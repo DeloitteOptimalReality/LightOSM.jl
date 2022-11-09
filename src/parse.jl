@@ -35,10 +35,26 @@ function maxspeed(tags::AbstractDict)::DEFAULT_OSM_MAXSPEED_TYPE
 end
 
 """
-Determine number of lanes given osm way tags dictionary.
+get correct DEFAULT_LANES dictionary based on the passed in tag
 """
-function lanes(tags::AbstractDict)::DEFAULT_OSM_LANES_TYPE
-    lanes = get(tags, "lanes", "default")
+function appropriate_lane_source(lanetag::AbstractString)::AbstractDict
+    if lanetag == "lanes"
+        return DEFAULT_LANES[]
+    elseif lanetag == "lanes:forward" || lanetag == "lanes:backward"
+        return DEFAULT_LANES[]
+    elseif lanetag == "lanes:both_ways"
+        return DEFAULT_LANES_BOTH_WAYS[]
+    else
+        throw(ErrorException("$lanetag does not have an associated default dictionary"))
+    end
+end
+
+
+"""
+Determine number of lanes, given osm way tags dictionary and tag which contains said lanes
+"""
+function lanes(tags::AbstractDict, lanetag::AbstractString)::DEFAULT_OSM_LANES_TYPE
+    lanes = get(tags, lanetag, "default")
     U = DEFAULT_OSM_LANES_TYPE
 
     if lanes != "default"
@@ -51,14 +67,16 @@ function lanes(tags::AbstractDict)::DEFAULT_OSM_LANES_TYPE
             lanes = [remove_non_numeric(l) for l in lanes]
             return U(round(mean(lanes)))
         else
-            throw(ErrorException("Lanes is neither a string nor number, check data quality: $lanes"))
+            throw(ErrorException("$lanetag is neither a string nor number, check data quality: $lanes"))
         end
     else
         highway_type = get(tags, "highway", "other")
-        key = getkey(DEFAULT_LANES[], highway_type, "other")
-        return U(DEFAULT_LANES[][key])
+        default_lane_source = appropriate_lane_source(lanetag)
+        key = getkey(default_lane_source, highway_type, "other")
+        return U(default_lane_source[key])
     end
 end
+    
 
 
 """
@@ -209,9 +227,23 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict, network_type::Sy
             tags = way["tags"]
             if is_highway(tags) && matches_network_type(tags, network_type)
                 tags["maxspeed"] = maxspeed(tags)
-                tags["lanes"] = lanes(tags)
+                tags["lanes"] = lanes(tags, "lanes")
                 tags["oneway"] = is_oneway(tags)
                 tags["reverseway"] = is_reverseway(tags)
+                if tags["oneway"]
+                    if tags["reverseway"]
+                        tags["lanes:forward"] = DEFAULT_OSM_LANES_TYPE(0)
+                        tags["lanes:backward"] = tags["lanes"]
+                    else
+                        tags["lanes:forward"] = tags["lanes"]
+                        tags["lanes:backward"] = DEFAULT_OSM_LANES_TYPE(0)
+                    end
+                    tags["lanes:both_ways"] = DEFAULT_OSM_LANES_TYPE(0)
+                else
+                    tags["lanes:forward"] = lanes(tags, "lanes:forward")
+                    tags["lanes:backward"] = lanes(tags, "lanes:backward")
+                    tags["lanes:both_ways"] = lanes(tags, "lanes:both_ways")
+                end
                 nds = way["nodes"]
                 union!(highway_nodes, nds)
                 id = way["id"]
