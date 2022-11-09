@@ -34,6 +34,8 @@ all further tags present on the original way are preserved, but not parsed to ap
 
 See [here](https://github.com/DeloitteOptimalReality/LightOSM.jl/blob/master/src/parse.jl#L4) for the full implementation of the `maxspeed` parsing, and [here](https://github.com/DeloitteOptimalReality/LightOSM.jl/blob/master/src/parse.jl#L56) for the full implementation of any `lanes` parsing.
 
+Also note that the `lanes` tag is interpreted as the number of lanes in one direction of the road. This conflicts with the official [OSM documentation](https://wiki.openstreetmap.org/wiki/Key:lanes?uselang=en). If you need accurate numbers of lanes in both directions, you want to use `lanes:forward` and `lanes:backward`. This discrepancy will be fixed in future releases.
+
 ### Railways
 The returned `Way` is guaranteed to have the following `keys`:
 - (`railway::String`)
