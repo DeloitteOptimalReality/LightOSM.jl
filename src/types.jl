@@ -1,16 +1,22 @@
 """
 Representation of a geospatial coordinates.
 
+# Fields
 - `lat::Float64`: Latitude.
 - `lon::Float64`: Longitude.
 - `alt::Float64`: Altitude.
+
+# Constructors
+    GeoLocation(lat, lon)
+    GeoLocation(point::Vector{<:Real})
+    GeoLocation(point_vector::Vector{<:Vector{<:Real}})
+    GeoLocation(g::OSMGraph, ep::EdgePoint)
 """
 @with_kw_noshow struct GeoLocation
     lat::Float64
     lon::Float64
     alt::Float64 = 0.0
 end
-
 GeoLocation(lat::AbstractFloat, lon::AbstractFloat)::GeoLocation = GeoLocation(lat=lat, lon=lon)
 GeoLocation(lat::Real, lon::Real)::GeoLocation = GeoLocation(lat=float(lat), lon=float(lon))
 GeoLocation(point::Vector{<:AbstractFloat})::GeoLocation = GeoLocation(point...)
@@ -19,6 +25,9 @@ GeoLocation(point_vector::Vector{<:Vector{<:Real}})::Vector{GeoLocation} = [GeoL
 
 function Base.:(==)(loc1::GeoLocation, loc2::GeoLocation)
     return loc1.lat == loc2.lat && loc1.lon == loc2.lon && loc1.alt == loc2.alt
+end
+function Base.isapprox(loc1::GeoLocation, loc2::GeoLocation)
+    return loc1.lat ≈ loc2.lat && loc1.lon ≈ loc2.lon && loc1.alt ≈ loc2.alt
 end
 function Base.hash(loc::GeoLocation, h::UInt)
     for field in fieldnames(GeoLocation)
@@ -30,6 +39,7 @@ end
 """
 OpenStreetMap node.
 
+# Fields
 `T<:Integer`
 - `id::T`: OpenStreetMap node id.
 - `nodes::Vector{T}`: Node's GeoLocation.
@@ -44,6 +54,7 @@ end
 """
 OpenStreetMap way.
 
+# Fields
 `T<:Integer`
 - `id::T`: OpenStreetMap way id.
 - `nodes::Vector{T}`: Ordered list of node ids making up the way.
@@ -75,6 +86,7 @@ end
 """
 OpenStreetMap turn restriction (relation).
 
+# Fields
 `T<:Integer`
 - `id::T`: OpenStreetMap relation id.
 - `type::String`: Either a `via_way` or `via_node` turn restriction.
@@ -101,6 +113,7 @@ end
 """
 Container for storing OpenStreetMap node, way, relation and graph related obejcts.
 
+# Fields
 `U <: Integer,T <: Integer,W <: Real`
 - `nodes::Dict{T,Node{T}}`: Mapping of node ids to node objects.
 - `node_coordinates::Vector{Vector{W}}`: Vector of node coordinates [[lat, lon]...], indexed by graph vertices.
@@ -155,6 +168,7 @@ end
 """
 OpenStreetMap building polygon.
 
+# Fields
 `T<:Integer`
 - `id::T`: OpenStreetMap building way id.
 - `nodes::Vector{T}`: Ordered list of node ids making up the building polyogn.
@@ -169,6 +183,7 @@ end
 """
 OpenStreetMap building.
 
+# Fields
 `T<:Integer`
 - `id::T`: OpenStreetMap building way id a simple polygon, relation id if a multi-polygon
 - `is_relation::Bool`: True if building is a a multi-polygon / relation.
@@ -196,3 +211,11 @@ abstract type DijkstraDict <: Dijkstra end
 abstract type AStar <: PathAlgorithm end
 abstract type AStarVector <: AStar end
 abstract type AStarDict <: AStar end
+
+"""
+Additional GeoLocation methods that require types defined above.
+"""
+GeoLocation(g::OSMGraph, ep::EdgePoint)::GeoLocation = GeoLocation(
+    lon = g.nodes[ep.n1].location.lon + (g.nodes[ep.n2].location.lon - g.nodes[ep.n1].location.lon) * ep.pos,
+    lat = g.nodes[ep.n1].location.lat + (g.nodes[ep.n2].location.lat - g.nodes[ep.n1].location.lat) * ep.pos
+)
