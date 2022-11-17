@@ -12,16 +12,16 @@ The returned `Way` is guaranteed to have the following `keys`:
 - `reverseway::Bool`
 - `lanes::DEFAULT_OSM_LANES_TYPE`
     - If the tag exists before parsing, `LightOSM` attempts to parse the content to a `DEFAULT_OSM_LANES_TYPE`
-    - If the tag does not exist before parsing, the default value as given by `DEFAULT_LANES[tags["highway"]]` is returned. If there is no tag with key `"highway"` in `DEFAULT_LANES`, then `DEFAULT_LANES["other"]` is used.
+    - If the tag does not exist before parsing, the default value as given by `DEFAULT_LANES_ONE_WAY[tags["highway"]]` is returned. If there is no tag with key `"highway"` in `DEFAULT_LANES_ONE_WAY`, then `DEFAULT_LANES_ONE_WAY["other"]` is used. (If the street is not `oneway`, the above discussed return values are multiplied by a factor of 2, one for every direction.)
 
 - `lanes:forward::DEFAULT_OSM_LANES_TYPE`
     - If the way is `oneway` and `reverseway` this value is 0
-    - If the way is `oneway` and not `reverseway` this value is the same as the `lanes` tag
-    - If the way is not `oneway`, the value is parsed like `lanes`, but with `"lanes"=>"lanes:forward"`
+    - If the way is `oneway` and not `reverseway` this value is parsed like `lines` but with `"lanes"=>"lanes:forward"`. If the tag `"lanes:forward"` did not exist before parsing, the value of `"lanes"` is choose instead.
+    - If the way is not `oneway`, the value is parsed like `lanes`, but with `"lanes"=>"lanes:forward"`, but without the factor of 2.
 
 - `lanes:backward::DEFAULT_OSM_LANES_TYPE`
     - If the way is `oneway` and not `reverseway` this value is 0
-    - If the way is `oneway` and `reverseway` this value is the same as the `lanes` tag
+    - If the way is `oneway` and `reverseway` this value is parsed like `lines` but with `"lanes"=>"lanes:backward"`. If the tag `"lanes:backward"` did not exist before parsing, the value of `"lanes"` is choose instead.
     - If the way is not `oneway`, the value is parsed like `lanes`, but with `"lanes"=>"lanes:backward"`
 
 - `lanes:both_ways::DEFAULT_OSM_LANES_TYPE`
@@ -33,6 +33,8 @@ The returned `Way` is guaranteed to have the following `keys`:
 all further tags present on the original way are preserved, but not parsed to appropriate datatypes, but rather left as `String`.
 
 See [here](https://github.com/DeloitteOptimalReality/LightOSM.jl/blob/master/src/parse.jl#L4) for the full implementation of the `maxspeed` parsing, and [here](https://github.com/DeloitteOptimalReality/LightOSM.jl/blob/master/src/parse.jl#L56) for the full implementation of any `lanes` parsing.
+
+See [here](https://github.com/DeloitteOptimalReality/LightOSM.jl/blob/master/src/parse.jl#L228) for the full implementation on how the final values are selected.
 
 ### Railways
 The returned `Way` is guaranteed to have the following `keys`:

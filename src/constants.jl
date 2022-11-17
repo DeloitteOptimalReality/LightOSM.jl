@@ -154,9 +154,9 @@ const DEFAULT_MAXSPEEDS = Ref(Dict{String,DEFAULT_OSM_MAXSPEED_TYPE}(
 ))
 
 """
-Default number of lanes based on highway type. 
+Default number of lanes based on highway type in one direction of the road.
 """
-const DEFAULT_LANES = Ref(Dict{String,DEFAULT_OSM_LANES_TYPE}(
+const DEFAULT_LANES_ONE_WAY = Ref(Dict{String,DEFAULT_OSM_LANES_TYPE}(
     "motorway" => 3,
     "trunk" => 3,
     "primary" => 2,
@@ -298,14 +298,14 @@ optional.
 """
 function set_defaults(;
                       maxspeeds::AbstractDict{String,<:Real}=DEFAULT_MAXSPEEDS[],
-                      lanes::AbstractDict{String,<:Integer}=DEFAULT_LANES[],
+                      lanes::AbstractDict{String,<:Integer}=DEFAULT_LANES_ONE_WAY[],
                       lanes_both_ways::AbstractDict{String,<:Integer}=DEFAULT_LANES_BOTH_WAYS[],
                       lane_efficiency::AbstractDict{<:Integer,<:Real}=LANE_EFFICIENCY[],
                       building_height_per_level::Real=DEFAULT_BUILDING_HEIGHT_PER_LEVEL[],
                       max_building_levels::Integer=DEFAULT_MAX_BUILDING_LEVELS[]
                       )
     DEFAULT_MAXSPEEDS[] = maxspeeds
-    DEFAULT_LANES[] = lanes
+    DEFAULT_LANES_ONE_WAY[] = lanes
     DEFAULT_LANES_BOTH_WAYS[] = lanes_both_ways
     LANE_EFFICIENCY[] = lane_efficiency
     DEFAULT_BUILDING_HEIGHT_PER_LEVEL[] = building_height_per_level

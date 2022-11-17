@@ -39,9 +39,9 @@ get correct DEFAULT_LANES dictionary based on the passed in tag
 """
 function appropriate_lane_source(lanetag::AbstractString)::AbstractDict
     if lanetag == "lanes"
-        return DEFAULT_LANES[]
+        return DEFAULT_LANES_ONE_WAY[]
     elseif lanetag == "lanes:forward" || lanetag == "lanes:backward"
-        return DEFAULT_LANES[]
+        return DEFAULT_LANES_ONE_WAY[]
     elseif lanetag == "lanes:both_ways"
         return DEFAULT_LANES_BOTH_WAYS[]
     else
@@ -53,7 +53,7 @@ end
 """
 Determine number of lanes, given osm way tags dictionary and tag which contains said lanes
 """
-function lanes(tags::AbstractDict, lanetag::AbstractString)::DEFAULT_OSM_LANES_TYPE
+function parse_lanes(tags::AbstractDict, lanetag::AbstractString)::DEFAULT_OSM_LANES_TYPE
     lanes = get(tags, lanetag, "default")
     U = DEFAULT_OSM_LANES_TYPE
 
@@ -227,23 +227,47 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict, network_type::Sy
             tags = way["tags"]
             if is_highway(tags) && matches_network_type(tags, network_type)
                 tags["maxspeed"] = maxspeed(tags)
-                tags["lanes"] = lanes(tags, "lanes")
                 tags["oneway"] = is_oneway(tags)
                 tags["reverseway"] = is_reverseway(tags)
+                
+                # get values from tags, regardless if the exist
+                lanes = parse_lanes(tags, "lanes")
+                lanes_forward = parse_lanes(tags, "lanes:forward")
+                lanes_backward = parse_lanes(tags, "lanes:backward")
+                lanes_both_ways = parse_lanes(tags, "lanes:both_ways")
+
                 if tags["oneway"]
                     if tags["reverseway"]
-                        tags["lanes:forward"] = DEFAULT_OSM_LANES_TYPE(0)
-                        tags["lanes:backward"] = tags["lanes"]
+                        lanes_forward = DEFAULT_OSM_LANES_TYPE(0)
+                        lanes_backward = haskey(tags, "lanes:backward") ? lanes_backward : lanes
                     else
-                        tags["lanes:forward"] = tags["lanes"]
-                        tags["lanes:backward"] = DEFAULT_OSM_LANES_TYPE(0)
+                        lanes_forward = haskey(tags, "lanes:forward") ? lanes_forward : lanes
+                        lanes_backward = DEFAULT_OSM_LANES_TYPE(0)
                     end
-                    tags["lanes:both_ways"] = DEFAULT_OSM_LANES_TYPE(0)
-                else
-                    tags["lanes:forward"] = lanes(tags, "lanes:forward")
-                    tags["lanes:backward"] = lanes(tags, "lanes:backward")
-                    tags["lanes:both_ways"] = lanes(tags, "lanes:both_ways")
+                    lanes_both_ways = DEFAULT_OSM_LANES_TYPE(0)
+                else  # if street is both ways
+                    lanes = haskey(tags, "lanes") ? lanes : DEFAULT_OSM_LANES_TYPE(2*lanes)
+                    if !(haskey(tags, "lanes:forward") && haskey(tags, "lanes:backward")) && (lanes % 2 == 0)
+                        lanes_forward = DEFAULT_OSM_LANES_TYPE(lanes/2)
+                        lanes_backward = DEFAULT_OSM_LANES_TYPE(lanes/2)
+                    elseif lanes == 1
+                        lanes_forward = DEFAULT_OSM_LANES_TYPE(0)
+                        lanes_backward = DEFAULT_OSM_LANES_TYPE(0)
+                        lanes_both_ways = DEFAULT_OSM_LANES_TYPE(1)
+                    end
                 end
+
+                # check integrity
+                if lanes != lanes_forward + lanes_backward + lanes_both_ways
+                    @warn "the number of lanes ($lanes) on way with id $(way["id"]) does not match the total number of lanes:forward ($lanes_forward), lanes:backward ($lanes_backward) and lanes:both_ways ($lanes_both_ways)"
+                end
+
+                # actually updating the values of the tags
+                tags["lanes"] = lanes
+                tags["lanes:forward"] = lanes_forward
+                tags["lanes:backward"] = lanes_backward
+                tags["lanes:both_ways"] = lanes_both_ways
+
                 nds = way["nodes"]
                 union!(highway_nodes, nds)
                 id = way["id"]
