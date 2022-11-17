@@ -32,7 +32,9 @@ The returned `Way` is guaranteed to have the following `keys`:
 
 all further tags present on the original way are preserved, but not parsed to appropriate datatypes, but rather left as `String`.
 
-See [here](https://github.com/DeloitteOptimalReality/LightOSM.jl/blob/master/src/parse.jl#L4) for the full implementation of the `maxspeed` parsing, and [here](https://github.com/DeloitteOptimalReality/LightOSM.jl/blob/master/src/parse.jl#L56) for the full implementation of any `lanes` parsing.
+See [here](https://github.com/DeloitteOptimalReality/LightOSM.jl/blob/master/src/parse.jl#L4) for the full implementation of the `maxspeed` parsing
+
+and [here](https://github.com/DeloitteOptimalReality/LightOSM.jl/blob/master/src/parse.jl#L56) for the full implementation of any `lanes` parsing.
 
 See [here](https://github.com/DeloitteOptimalReality/LightOSM.jl/blob/master/src/parse.jl#L228) for the full implementation on how the final values are selected.
 
