@@ -22,4 +22,5 @@ const TEST_OSM_URL = "https://raw.githubusercontent.com/DeloitteOptimalReality/L
     @testset "Graph" begin include("graph.jl") end
     @testset "Traversal" begin include("traversal.jl") end
     @testset "Subgraph" begin include("subgraph.jl") end
+    @testset "Types" begin include("types.jl") end
 end
