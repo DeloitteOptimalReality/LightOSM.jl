@@ -201,7 +201,8 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict, network_type::Sy
     U = DEFAULT_OSM_INDEX_TYPE
     T = DEFAULT_OSM_ID_TYPE
     W = DEFAULT_OSM_EDGE_WEIGHT_TYPE
-    
+    L = DEFAULT_OSM_LANES_TYPE
+
     ways = Dict{T,Way{T}}()
     highway_nodes = Set{Int}([])
     for way in osm_network_dict["way"]
@@ -222,7 +223,7 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict, network_type::Sy
                 tags["gauge"] = get(tags, "gauge", nothing)
                 tags["usage"] = get(tags, "usage",  "unknown")
                 tags["name"] = get(tags, "name", "unknown")
-                tags["lanes"] = get(tags, "tracks", 1)
+                tags["lanes"] = L(get(tags, "tracks", 1))
                 tags["maxspeed"] = maxspeed(tags)
                 tags["oneway"] = is_oneway(tags)
                 tags["reverseway"] = is_reverseway(tags)
