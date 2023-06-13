@@ -3,6 +3,7 @@
     @test LightOSM.osm_network_downloader(:bbox) == LightOSM.osm_network_from_bbox
     @test LightOSM.osm_network_downloader(:point) == LightOSM.osm_network_from_point
     @test LightOSM.osm_network_downloader(:polygon) == LightOSM.osm_network_from_polygon
+    @test LightOSM.osm_network_downloader(:custom_filters) == LightOSM.osm_network_from_custom_filters
     @test_throws ArgumentError LightOSM.osm_network_downloader(:doesnt_exist)
 end
 
@@ -23,22 +24,54 @@ end
         try
             wait_for_overpass()
             data = download_osm_network(:point,
-                                        radius=0.5,
-                                        point=GeoLocation(-37.8136, 144.9631),
-                                        network_type=:drive,
-                                        download_format=format,
-                                        save_to_file_location=filename);
+                radius=0.5,
+                point=GeoLocation(-37.8136, 144.9631),
+                network_type=:drive,
+                download_format=format,
+                save_to_file_location=filename)
             @test isfile(filename)
             g = graph_from_file(filename) # Check it doesn't error
         catch err
             # Sometimes gets HTTP.ExceptionRequest.StatusError in tests due to connection to overpass
             !isa(err, HTTP.ExceptionRequest.StatusError) && rethrow()
-            @error "Test failed due to connection issue" exception=(err, catch_backtrace())
+            @error "Test failed due to connection issue" exception = (err, catch_backtrace())
         end
 
         try
             rm(filename)
         catch
         end
+    end
+
+    #run test for custom filters
+    try
+        wait_for_overpass()
+        filename = "map.json"
+        format = :json
+        custom_filters = """way
+        ["highway"]
+        ["motorcar"!~"no"]
+        ["area"!~"yes"]   
+          ["highway"!~"elevator|steps|tertiary|construction|bridleway|proposed|track|pedestrian|secondary|path|living_street|cycleway|primary|footway|platform|abandoned|service|escalator|corridor|raceway"]
+        ["motor_vehicle"!~"no"]["access"!~"private"]
+        ["service"!~"parking|parking_aisle|driveway|private|emergency_access"]
+        ;
+            >
+            ;
+
+        """
+
+        bbox = [-37.816779513558274, 144.9590750877158, -37.81042034950731, 144.967124565619]
+        
+        test_custom_query = download_osm_network(:custom_filters, download_format=format,
+                    save_to_file_location=filename,
+                     custom_filters = custom_filters, bbox = bbox)
+
+
+        g = graph_from_file(filename)
+    catch err
+        
+        @warn "Could not build graph" 
+        rethrow()
     end
 end

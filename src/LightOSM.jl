@@ -57,7 +57,7 @@ export GeoLocation,
     buildings_from_file,
     osm_subgraph,
     get_graph_type,
-    osm_network_from_custom_query
+    osm_network_from_custom_filters
 
 export index_to_node_id,
     index_to_node,
