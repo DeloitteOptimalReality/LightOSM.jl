@@ -90,16 +90,44 @@ Forms an Overpass query string. For a guide on the OSM query language, see https
 - `String`: Overpass query string.
 """
 function overpass_query(filters::String,
-                        metadata::Bool=false,
-                        download_format::Symbol=:json,
-                        bbox::Union{Vector{<:AbstractFloat},Nothing}=nothing
-                        )::String
+    metadata::Bool=false,
+    download_format::Symbol=:json,
+    bbox::Union{Vector{<:AbstractFloat},Nothing}=nothing
+)::String
     download_format_str = """[out:$(OSM_DOWNLOAD_FORMAT[download_format])]"""
     bbox_str = bbox === nothing ? "" : """[bbox:$(replace("$bbox", r"[\[ \]]" =>  ""))]"""
     metadata_str = metadata ? "meta" : ""
     query = """$download_format_str[timeout:180]$bbox_str;($filters);out count;out $metadata_str;"""
     @debug """Making overpass query: $query"""
     return query
+end
+
+"""
+osm_network_from_custom_query(filters::String,
+                   metadata::Bool=false,
+                   download_format::Symbol=:json,
+                   bbox::Union{Vector{AbstractFloat},Nothing}=nothing
+                   )::String
+
+To pass in a custom query string, filters and bbox
+
+# Arguments
+- `filters::String`: Filters for the query, e.g. polygon filter, highways only, traffic lights only, etc.
+- `metadata::Bool=false`: Set true to return metadata.
+- `download_format::Symbol=:json`: Download format, either `:osm`, `:xml` or `json`.
+- `bbox::Union{Vector{AbstractFloat},Nothing}=nothing`: Optional bounding box filter.
+
+# Return
+- `String`: Overpass query string.
+"""
+function osm_network_from_custom_query(filters::String,
+    metadata::Bool=false,
+    download_format::Symbol=:json,
+    bbox::Union{Vector{<:AbstractFloat},Nothing}=nothing)::String
+    # return overpass_request(query)
+    query = overpass_query(filters, metadata, download_format, bbox)
+    response = overpass_request(query)
+    return response
 end
 
 """
@@ -121,17 +149,17 @@ Forms an Overpass query string using geojosn polygon coordinates as a filter.
 - `String`: Overpass query string.
 """
 function overpass_polygon_network_query(geojson_polygons::AbstractVector{<:AbstractVector},
-                                        network_type::Symbol=:drive,
-                                        metadata::Bool=false,
-                                        download_format::Symbol=:json
-                                        )::String
+    network_type::Symbol=:drive,
+    metadata::Bool=false,
+    download_format::Symbol=:json
+)::String
     way_filter = WAY_FILTERS_QUERY[network_type]
     relation_filter = RELATION_FILTERS_QUERY[network_type]
 
     filters = ""
     for polygon in geojson_polygons
         polygon = map(x -> [x[2], x[1]], polygon) # switch lon-lat to lat-lon
-        polygon_str = replace("$polygon", r"[\[,\]]" =>  "")
+        polygon_str = replace("$polygon", r"[\[,\]]" => "")
         filters *= """way$way_filter(poly:"$polygon_str");>;"""
         if !isnothing(relation_filter)
             filters *= """rel$relation_filter(poly:"$polygon_str");>;"""
@@ -160,7 +188,7 @@ function polygon_from_place_name(place_name::String)::Vector{Vector{Any}}
         if item["geojson"]["type"] == "Polygon"
             @info "Using Polygon for $(item["display_name"])"
             return item["geojson"]["coordinates"]
-        elseif item["geojson"]["type"] ==  "MultiPolygon"
+        elseif item["geojson"]["type"] == "MultiPolygon"
             @info "Using MultiPolygon for $(item["display_name"])"
             return collect(Iterators.flatten(item["geojson"]["coordinates"]))
         end
@@ -187,11 +215,11 @@ Downloads an OpenStreetMap network using any place name string.
 # Return
 - `String`: OpenStreetMap network data response string.
 """
-function osm_network_from_place_name(;place_name::String,
-                                     network_type::Symbol=:drive,
-                                     metadata::Bool=false,
-                                     download_format::Symbol=:json
-                                     )::String
+function osm_network_from_place_name(; place_name::String,
+    network_type::Symbol=:drive,
+    metadata::Bool=false,
+    download_format::Symbol=:json
+)::String
     geojson_polygons = polygon_from_place_name(place_name)
     query = overpass_polygon_network_query(geojson_polygons, network_type, metadata, download_format)
     return overpass_request(query)
@@ -215,11 +243,11 @@ Downloads an OpenStreetMap network using a polygon.
 # Return
 - `String`: OpenStreetMap network data response string.
 """
-function osm_network_from_polygon(;polygon::AbstractVector{<:AbstractVector{<:Real}},
-                                  network_type::Symbol=:drive,
-                                  metadata::Bool=false,
-                                  download_format::Symbol=:json
-                                  )::String
+function osm_network_from_polygon(; polygon::AbstractVector{<:AbstractVector{<:Real}},
+    network_type::Symbol=:drive,
+    metadata::Bool=false,
+    download_format::Symbol=:json
+)::String
     query = overpass_polygon_network_query([polygon], network_type, metadata, download_format)
     return overpass_request(query)
 end
@@ -243,10 +271,10 @@ Forms an Overpass query string using a bounding box as a filter.
 - `String`: Overpass query string.
 """
 function overpass_bbox_network_query(bbox::Vector{<:AbstractFloat},
-                                     network_type::Symbol=:drive,
-                                     metadata::Bool=false,
-                                     download_format::Symbol=:json
-                                     )::String
+    network_type::Symbol=:drive,
+    metadata::Bool=false,
+    download_format::Symbol=:json
+)::String
     way_filter = WAY_FILTERS_QUERY[network_type]
     relation_filter = RELATION_FILTERS_QUERY[network_type]
     filters = "way$way_filter;>;"
@@ -280,14 +308,14 @@ Downloads an OpenStreetMap network using bounding box coordinates.
 # Return
 - `String`: OpenStreetMap network data response string.
 """
-function osm_network_from_bbox(;minlat::AbstractFloat,
-                               minlon::AbstractFloat,
-                               maxlat::AbstractFloat,
-                               maxlon::AbstractFloat,
-                               network_type::Symbol=:drive,
-                               metadata::Bool=false,
-                               download_format::Symbol=:json
-                               )::String
+function osm_network_from_bbox(; minlat::AbstractFloat,
+    minlon::AbstractFloat,
+    maxlat::AbstractFloat,
+    maxlon::AbstractFloat,
+    network_type::Symbol=:drive,
+    metadata::Bool=false,
+    download_format::Symbol=:json
+)::String
     query = overpass_bbox_network_query([minlat, minlon, maxlat, maxlon], network_type, metadata, download_format)
     return overpass_request(query)
 end
@@ -312,14 +340,14 @@ Downloads an OpenStreetMap network using bounding box coordinates calculated fro
 # Return
 - `String`: OpenStreetMap network data response string.
 """
-function osm_network_from_point(;point::GeoLocation,
-                                radius::Number,
-                                network_type::Symbol=:drive,
-                                metadata::Bool=false,
-                                download_format::Symbol=:json
-                                )::String
+function osm_network_from_point(; point::GeoLocation,
+    radius::Number,
+    network_type::Symbol=:drive,
+    metadata::Bool=false,
+    download_format::Symbol=:json
+)::String
     bbox = bounding_box_from_point(point, radius)
-    return osm_network_from_bbox(;bbox..., network_type=network_type, metadata=metadata, download_format=download_format)
+    return osm_network_from_bbox(; bbox..., network_type=network_type, metadata=metadata, download_format=download_format)
 end
 
 """
@@ -389,12 +417,12 @@ Downloads an OpenStreetMap network by querying with a place name, bounding box, 
 - `Union{XMLDocument,Dict{String,Any}}`: OpenStreetMap network data parsed as either XML or Dictionary object depending on the download method.
 """
 function download_osm_network(download_method::Symbol;
-                              network_type::Symbol=:drive,
-                              metadata::Bool=false,
-                              download_format::Symbol=:json,
-                              save_to_file_location::Union{String,Nothing}=nothing,
-                              download_kwargs...
-                              )::Union{XMLDocument,Dict{String,Any}}
+    network_type::Symbol=:drive,
+    metadata::Bool=false,
+    download_format::Symbol=:json,
+    save_to_file_location::Union{String,Nothing}=nothing,
+    download_kwargs...
+)::Union{XMLDocument,Dict{String,Any}}
     downloader = osm_network_downloader(download_method)
     data = downloader(network_type=network_type, metadata=metadata, download_format=download_format; download_kwargs...)
     @info "Downloaded osm network data from $(["$k: $v" for (k, v) in download_kwargs]) in $download_format format"
