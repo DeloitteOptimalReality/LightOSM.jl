@@ -103,6 +103,36 @@ function overpass_query(filters::String,
 end
 
 """
+osm_network_from_custom_filters(custom_filters::String,
+                   metadata::Bool=false,
+                   download_format::Symbol=:json,
+                   bbox::Union{Vector{AbstractFloat},Nothing}=nothing
+                   )::String
+
+To pass in a custom query string, filters and bbox
+
+# Arguments
+- `custom_filters::String`: Custom filters for the query, e.g. polygon filter, highways only, traffic lights only, etc.
+- `metadata::Bool=false`: Set true to return metadata.
+- `download_format::Symbol=:json`: Download format, either `:osm`, `:xml` or `json`.
+- `bbox::Union{Vector{AbstractFloat},Nothing}=nothing`: Optional bounding box filter.
+- `network_type::Symbol=:drive`: 
+
+# Return
+- `String`: Overpass query string.
+"""
+function osm_network_from_custom_filters(;custom_filters::String,
+    network_type::Symbol=:drive,
+    metadata::Bool=false,
+    download_format::Symbol=:json,
+    bbox::Union{Vector{<:AbstractFloat},Nothing}=nothing)::String
+    # return overpass_request(query)
+    query = overpass_query(custom_filters, metadata, download_format, bbox)
+    response = overpass_request(query)
+    return response
+end
+
+"""
     overpass_polygon_network_query(geojson_polygons::Vector{Vector{Any}},
                                    network_type::Symbol=:drive,
                                    metadata::Bool=false,
@@ -334,6 +364,8 @@ function osm_network_downloader(download_method::Symbol)::Function
         return osm_network_from_point
     elseif download_method == :polygon
         return osm_network_from_polygon
+    elseif download_method == :custom_filters
+        return osm_network_from_custom_filters
     else
         throw(ArgumentError("OSM network downloader $download_method does not exist"))
     end
@@ -374,6 +406,12 @@ Downloads an OpenStreetMap network by querying with a place name, bounding box, 
 
 *`download_method=:polygon`*
 - `polygon::AbstractVector`: Vector of longitude-latitude pairs.
+
+*`download_method=:custom_filters`*
+- `custom_filters::String`: Filters for the query, e.g. polygon filter, highways only, traffic lights only, etc.
+- `metadata::Bool=false`: Set true to return metadata.
+- `download_format::Symbol=:json`: Download format, either `:osm`, `:xml` or `json`.
+- `bbox::Union{Vector{AbstractFloat},Nothing}=nothing`: Optional bounding box filter.
 
 # Network Types
 - `:drive`: Motorways excluding private and service ways.
