@@ -42,36 +42,53 @@ end
         catch
         end
     end
+end
 
-    #run test for custom filters
-    try
-        wait_for_overpass()
-        filename = "map.json"
-        format = :json
-        custom_filters = """way
+@testset "Download with custom filters" begin
+    filename = "map.json"
+    format = :json
+    custom_filters = """
+    way
         ["highway"]
         ["motorcar"!~"no"]
         ["area"!~"yes"]   
-          ["highway"!~"elevator|steps|tertiary|construction|bridleway|proposed|track|pedestrian|secondary|path|living_street|cycleway|primary|footway|platform|abandoned|service|escalator|corridor|raceway"]
+        ["highway"!~"elevator|steps|tertiary|construction|bridleway|proposed|track|pedestrian|secondary|path|living_street|cycleway|primary|footway|platform|abandoned|service|escalator|corridor|raceway"]
         ["motor_vehicle"!~"no"]["access"!~"private"]
         ["service"!~"parking|parking_aisle|driveway|private|emergency_access"]
-        ;
-            >
-            ;
+    ;
+    >
+    ;
+    """
+    bbox = [-37.816779513558274, 144.9590750877158, -37.81042034950731, 144.967124565619]
 
-        """
+    try
+        wait_for_overpass()
+        test_custom_query = download_osm_network(
+            :custom_filters, 
+            download_format=format,
+            save_to_file_location=filename,
+            custom_filters=custom_filters, 
+            bbox = bbox
+        )
 
-        bbox = [-37.816779513558274, 144.9590750877158, -37.81042034950731, 144.967124565619]
-        
-        test_custom_query = download_osm_network(:custom_filters, download_format=format,
-                    save_to_file_location=filename,
-                     custom_filters = custom_filters, bbox = bbox)
-
-
+        @test isfile(filename)
         g = graph_from_file(filename)
+        for (_, way) in g.ways
+            # Make sure Overpass excluded these tags, as they are excluded in the filter
+            highway_tags_to_check = ["primary", "secondary", "tertiary", "living_street"]
+            if haskey(way.tags, "highway")
+                @test way.tags["highway"] ∉ highway_tags_to_check
+            end
+        end
     catch err
-        
-        @warn "Could not build graph" 
-        rethrow()
+        # Sometimes gets HTTP.ExceptionRequest.StatusError in tests due to connection to overpass
+        !isa(err, HTTP.ExceptionRequest.StatusError) && rethrow()
+        @error "Test failed due to connection issue" exception = (err, catch_backtrace())
+    end
+
+    # Remove file after test
+    try
+        rm(filename)
+    catch
     end
 end
