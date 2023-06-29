@@ -47,12 +47,17 @@ end
 @testset "Download with custom filters" begin
     filename = "map.json"
     format = :json
+    #=
+    Compared to the defauilt network_type=:drive, this filter:
+    - Excludes all ways with highway=tertiary, secondary, primary, living_street
+    - Includes all ways with highway=service
+    =#
     custom_filters = """
     way
         ["highway"]
         ["motorcar"!~"no"]
         ["area"!~"yes"]   
-        ["highway"!~"elevator|steps|tertiary|construction|bridleway|proposed|track|pedestrian|secondary|path|living_street|cycleway|primary|footway|platform|abandoned|service|escalator|corridor|raceway"]
+        ["highway"!~"elevator|steps|tertiary|construction|bridleway|proposed|track|pedestrian|secondary|path|living_street|cycleway|primary|footway|platform|abandoned|escalator|corridor|raceway"]
         ["motor_vehicle"!~"no"]["access"!~"private"]
         ["service"!~"parking|parking_aisle|driveway|private|emergency_access"]
     ;
@@ -72,14 +77,19 @@ end
         )
 
         @test isfile(filename)
-        g = graph_from_file(filename)
+        g = graph_from_file(filename, filter_network_type=false)
+
+        # Make sure Overpass included/excluded these tags according to the custom filter
+        excluded_tags = ["primary", "secondary", "tertiary", "living_street"]
+        included_tags = ["service"]
+        included_tags_count = 0
         for (_, way) in g.ways
-            # Make sure Overpass excluded these tags, as they are excluded in the filter
-            highway_tags_to_check = ["primary", "secondary", "tertiary", "living_street"]
             if haskey(way.tags, "highway")
-                @test way.tags["highway"] ∉ highway_tags_to_check
+                @test way.tags["highway"] ∉ excluded_tags
+                (way.tags["highway"] ∈ included_tags) && (included_tags_count += 1)
             end
         end
+        @test included_tags_count > 0
     catch err
         # Sometimes gets HTTP.ExceptionRequest.StatusError in tests due to connection to overpass
         !isa(err, HTTP.ExceptionRequest.StatusError) && rethrow()

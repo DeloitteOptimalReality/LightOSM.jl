@@ -197,7 +197,10 @@ end
 """
 Parse OpenStreetMap data into `Node`, `Way` and `Restriction` objects.
 """
-function parse_osm_network_dict(osm_network_dict::AbstractDict, network_type::Symbol=:drive)::OSMGraph
+function parse_osm_network_dict(osm_network_dict::AbstractDict, 
+                                network_type::Symbol=:drive;
+                                filter_network_type::Bool=true
+                                )::OSMGraph
     U = DEFAULT_OSM_INDEX_TYPE
     T = DEFAULT_OSM_ID_TYPE
     W = DEFAULT_OSM_EDGE_WEIGHT_TYPE
@@ -208,7 +211,7 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict, network_type::Sy
     for way in osm_network_dict["way"]
         if haskey(way, "tags") && haskey(way, "nodes")
             tags = way["tags"]
-            if is_highway(tags) && matches_network_type(tags, network_type)
+            if is_highway(tags) && (!filter_network_type || matches_network_type(tags, network_type))
                 tags["maxspeed"] = maxspeed(tags)
                 tags["lanes"] = lanes(tags)
                 tags["oneway"] = is_oneway(tags)
@@ -217,7 +220,7 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict, network_type::Sy
                 union!(highway_nodes, nds)
                 id = way["id"]
                 ways[id] = Way(id, nds, tags)
-            elseif is_railway(tags) && matches_network_type(tags, network_type)
+            elseif is_railway(tags) && (!filter_network_type || matches_network_type(tags, network_type))
                 tags["rail_type"] = get(tags, "railway", "unknown")
                 tags["electrified"] = get(tags, "electrified", "unknown")
                 tags["gauge"] = get(tags, "gauge", nothing)
@@ -334,15 +337,29 @@ end
 """
 Initialises the OSMGraph object from OpenStreetMap data downloaded in `:xml` or `:osm` format.
 """
-function init_graph_from_object(osm_xml_object::XMLDocument, network_type::Symbol=:drive)::OSMGraph
+function init_graph_from_object(osm_xml_object::XMLDocument, 
+                                network_type::Symbol=:drive;
+                                filter_network_type::Bool=true
+                                )::OSMGraph
     dict_to_parse = osm_dict_from_xml(osm_xml_object)
-    return parse_osm_network_dict(dict_to_parse, network_type)
+    return parse_osm_network_dict(
+        dict_to_parse, 
+        network_type; 
+        filter_network_type=filter_network_type
+    )
 end
 
 """
 Initialises the OSMGraph object from OpenStreetMap data downloaded in `:json` format.
 """
-function init_graph_from_object(osm_json_object::AbstractDict, network_type::Symbol=:drive)::OSMGraph
+function init_graph_from_object(osm_json_object::AbstractDict, 
+                                network_type::Symbol=:drive;
+                                filter_network_type::Bool=true
+                                )::OSMGraph
     dict_to_parse = osm_dict_from_json(osm_json_object)
-    return parse_osm_network_dict(dict_to_parse, network_type)
+    return parse_osm_network_dict(
+        dict_to_parse, 
+        network_type; 
+        filter_network_type=filter_network_type
+    )
 end

@@ -27,6 +27,9 @@ Creates an `OSMGraph` object from download OpenStreetMap network data, use with
     possible for graphs with large amount of nodes due to memory limits.
 - `largest_connected_component::Bool=true`: Set true to keep only the largest connected 
     components in the network.
+- `filter_network_type::Bool=true`: Set true to filter out nodes and edges that do not 
+    match the `network_type` filter. Useful if the network data was downloaded with custom
+    Overpass filters and/or not generated with LightOSM.
 
 # Return
 - `OSMGraph`: Container for storing OpenStreetMap node-, way-, relation- and graph-related 
@@ -37,9 +40,10 @@ function graph_from_object(osm_data_object::Union{XMLDocument,Dict};
                            weight_type::Symbol=:time,
                            graph_type::Symbol=:static,
                            precompute_dijkstra_states::Bool=false,
-                           largest_connected_component::Bool=true
+                           largest_connected_component::Bool=true,
+                           filter_network_type::Bool=true
                            )::OSMGraph
-    g = init_graph_from_object(osm_data_object, network_type)
+    g = init_graph_from_object(osm_data_object, network_type, filter_network_type=filter_network_type)
     add_node_and_edge_mappings!(g)
     add_weights!(g, weight_type)
     add_graph!(g, graph_type)
@@ -61,13 +65,13 @@ function graph_from_object(osm_data_object::Union{XMLDocument,Dict};
 end
 
 """
-    graph_from_object(file_path::String;
-                      network_type::Symbol=:drive,
-                      weight_type::Symbol=:time,
-                      graph_type::Symbol=:static,
-                      precompute_dijkstra_states::Bool=false,
-                      largest_connected_component::Bool=true
-                      )::OSMGraph
+    graph_from_file(file_path::String;
+                    network_type::Symbol=:drive,
+                    weight_type::Symbol=:time,
+                    graph_type::Symbol=:static,
+                    precompute_dijkstra_states::Bool=false,
+                    largest_connected_component::Bool=true
+                    )::OSMGraph
 
 Creates an `OSMGraph` object from a downloaded OpenStreetMap network data file, the extention must be either `.json`, `.osm` or `.xml`.
 
@@ -78,6 +82,9 @@ Creates an `OSMGraph` object from a downloaded OpenStreetMap network data file, 
 - `graph_type::Symbol=:static`: Type of `Graphs.AbstractGraph`, pick from `:static` (StaticDiGraph), `:light` (DiGraph), `:simple_weighted` (SimpleWeightedDiGraph), `:meta` (MetaDiGraph).
 - `precompute_dijkstra_states::Bool=false`: Set true to precompute dijkstra parent states for every source node in the graph, *NOTE* this may take a while and may not be possible for graphs with large amount of nodes due to memory limits.
 - `largest_connected_component::Bool=true`: Set true to keep only the largest connected components in the network.
+- `filter_network_type::Bool=true`: Set true to filter out nodes and edges that do not 
+    match the `network_type` filter. Useful if the network data was downloaded with custom
+    Overpass filters and/or not generated with LightOSM.
 
 # Return
 - `OSMGraph`: Container for storing OpenStreetMap node, way, relation and graph related obejcts.
@@ -87,7 +94,8 @@ function graph_from_file(file_path::String;
                          weight_type::Symbol=:time,
                          graph_type::Symbol=:static,
                          precompute_dijkstra_states::Bool=false,
-                         largest_connected_component::Bool=true
+                         largest_connected_component::Bool=true,
+                         filter_network_type::Bool=true
                          )::OSMGraph
 
     !isfile(file_path) && throw(ArgumentError("File $file_path does not exist"))
@@ -98,7 +106,8 @@ function graph_from_file(file_path::String;
                              weight_type=weight_type,
                              graph_type=graph_type,
                              precompute_dijkstra_states=precompute_dijkstra_states,
-                             largest_connected_component=largest_connected_component)
+                             largest_connected_component=largest_connected_component,
+                             filter_network_type=filter_network_type)
 end
 
 """
@@ -126,6 +135,9 @@ Downloads OpenStreetMap network data and creates an `OSMGraph` object.
 - `graph_type::Symbol=:static`: Type of `Graphs.AbstractGraph`, pick from `:static` (StaticDiGraph), `:light` (DiGraph), `:simple_weighted` (SimpleWeightedDiGraph), `:meta` (MetaDiGraph).
 - `precompute_dijkstra_states::Bool=false`: Set true to precompute dijkstra parent states for every source node in the graph, *NOTE* this may take a while and may not be possible for graphs with large amount of nodes due to memory limits.
 - `largest_connected_component::Bool=true`: Set true to keep only the largest connected components in the network.
+- `filter_network_type::Bool=true`: Set true to filter out nodes and edges that do not 
+    match the `network_type` filter after download. You may want to use this with 
+    `download_method=:custom_filters`.
 
 # Required Kwargs for each Download Method
 
@@ -167,6 +179,7 @@ function graph_from_download(download_method::Symbol;
                              graph_type::Symbol=:static,
                              precompute_dijkstra_states::Bool=false,
                              largest_connected_component::Bool=true,
+                             filter_network_type::Bool=true,
                              download_kwargs...
                              )::OSMGraph
     obj = download_osm_network(download_method,
@@ -180,7 +193,8 @@ function graph_from_download(download_method::Symbol;
                              weight_type=weight_type,
                              graph_type=graph_type,
                              precompute_dijkstra_states=precompute_dijkstra_states,
-                             largest_connected_component=largest_connected_component)
+                             largest_connected_component=largest_connected_component,
+                             filter_network_type=filter_network_type)
 end
 
 
