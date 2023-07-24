@@ -210,7 +210,8 @@ function parse_osm_buildings_dict(osm_buildings_dict::AbstractDict)::Dict{Intege
             members = relation["members"]
             
             polygons = Vector{Polygon{T}}()
-            for member in members
+            for member in members 
+                member["type"] != "way" && continue
                 way_id = member["ref"]
                 way = ways[way_id]
 
