@@ -1,7 +1,7 @@
 """
     osm_subgraph(g::OSMGraph{U, T, W},
                  vertex_list::Vector{U}
-                 )::OSMGraph where {U <: Integer, T <: Integer, W <: Real}
+                 )::OSMGraph where {U <: DEFAULT_OSM_INDEX_TYPE, T <: DEFAULT_OSM_ID_TYPE, W <: Real}
 
 Create an OSMGraph representing a subgraph of another OSMGraph containing 
 specified vertices.
@@ -11,7 +11,7 @@ Vertex numbers within the original graph object are not mapped to the subgraph.
 """
 function osm_subgraph(g::OSMGraph{U, T, W},
                       vertex_list::Vector{U}
-                      ) where {U, T, W}
+                      ) where {U <: DEFAULT_OSM_INDEX_TYPE, T <: DEFAULT_OSM_ID_TYPE, W <: Real}
 
     # Get all nodes and ways for the subgraph
     nodelist = [g.nodes[g.index_to_node[v]] for v in vertex_list]
@@ -56,6 +56,6 @@ function osm_subgraph(g::OSMGraph{U, T, W},
     return osg
 end
 
-function osm_subgraph(g::OSMGraph{U, T, W}, node_list::Vector{T}) where {U <: Integer, T <: Integer, W <: Real} 
+function osm_subgraph(g::OSMGraph{U, T, W}, node_list::Vector{T}) where {U <: DEFAULT_OSM_INDEX_TYPE, T <: DEFAULT_OSM_ID_TYPE, W <: Real}
     return osm_subgraph(g, [g.node_to_index[n] for n in node_list])
 end

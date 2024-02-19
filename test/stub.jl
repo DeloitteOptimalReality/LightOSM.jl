@@ -60,7 +60,56 @@ function basic_osm_graph_stub(weight_type=:distance, graph_type=:static)
     )
     restrictions = Dict(restriction1.id => restriction1)
     U = LightOSM.DEFAULT_OSM_INDEX_TYPE
-    T = LightOSM.DEFAULT_OSM_ID_TYPE
+    T = Int
+    W = LightOSM.DEFAULT_OSM_EDGE_WEIGHT_TYPE
+    g = OSMGraph{U,T,W}(nodes=nodes, ways=ways, restrictions=restrictions)
+    LightOSM.add_node_and_edge_mappings!(g)
+    LightOSM.add_weights!(g, weight_type)
+    LightOSM.add_graph!(g, graph_type)
+    LightOSM.add_node_tags!(g)
+    LightOSM.add_indexed_restrictions!(g)
+    g.dijkstra_states = Vector{Vector{U}}(undef, length(g.nodes))
+    LightOSM.add_kdtree_and_rtree!(g)
+    return g
+end
+
+function basic_osm_graph_stub_string(weight_type=:distance, graph_type=:static)
+    # Nodes
+    lats = [-38.0751637, -38.0752637, -38.0753637, -38.0754637, -38.0755637, -38.0752637, -38.0753637, -38.0753637]
+    lons = [145.3326838, 145.3326838, 145.3326838, 145.3326838, 145.3326838, 145.3327838, 145.3327838, 145.3328838]
+    node_ids = ["1001", "1002", "1003", "1004", "1005", "1006", "1007", "1008"]
+    nodes = Dict(id => Node(id, GeoLocation(lat, lon), Dict{String, Any}()) for (lat, lon, id) in zip(lats, lons, node_ids))
+
+    # Ways
+    way_ids = ["2001", "2002", "2003", "2004"]
+    way_nodes = [
+        ["1001", "1002", "1003", "1004"],
+        ["1001", "1006", "1007", "1004"],
+        ["1004", "1005"],
+        ["1008", "1007"],
+    ]
+    tag_dicts = [
+        Dict{String, Any}("oneway" => false, "reverseway" => false, "maxspeed" => Int16(50),  "lanes" => Int8(2)),
+        Dict{String, Any}("oneway" => false, "reverseway" => false, "maxspeed" => Int16(100), "lanes" => Int8(4)),
+        Dict{String, Any}("oneway" => false, "reverseway" => false, "maxspeed" => Int16(50),  "lanes" => Int8(2)),
+        Dict{String, Any}("oneway" => true,  "reverseway" => false, "maxspeed" => Int16(50),  "lanes" => Int8(1)),
+    ]
+    ways = Dict(way_id => Way(way_id, nodes, tag_dict) for (way_id, nodes, tag_dict) in zip(way_ids, way_nodes, tag_dicts))
+
+    restriction1 = Restriction(
+        "3001",
+        "via_node",
+        Dict{String, Any}("restriction"=>"no_right_turn","type"=>"restriction"),
+        "2002",
+        "2001",
+        "1004",
+        nothing,
+        true,
+        false
+    )
+    restrictions = Dict(restriction1.id => restriction1)
+    U = LightOSM.DEFAULT_OSM_INDEX_TYPE
+    T = String
     W = LightOSM.DEFAULT_OSM_EDGE_WEIGHT_TYPE
     g = OSMGraph{U,T,W}(nodes=nodes, ways=ways, restrictions=restrictions)
     LightOSM.add_node_and_edge_mappings!(g)

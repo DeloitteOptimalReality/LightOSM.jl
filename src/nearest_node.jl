@@ -47,9 +47,9 @@ not included in the results.
     Tuple elements are `Vector`sif a `Vector` of nodes is inputted, and numbers if a single point is inputted.
 """
 nearest_node(g::OSMGraph, node::Node) = nearest_node(g, node.location, (index)->index==g.node_to_index[node.id])
-nearest_node(g::OSMGraph, node_id::Integer) = nearest_node(g, g.nodes[node_id])
+nearest_node(g::OSMGraph, node_id::DEFAULT_OSM_ID_TYPE) = nearest_node(g, g.nodes[node_id])
 nearest_node(g::OSMGraph, nodes::Vector{<:Node}) = nearest_node(g, [n.id for n in nodes])
-function nearest_node(g::OSMGraph, node_ids::AbstractVector{<:Integer})
+function nearest_node(g::OSMGraph, node_ids::AbstractVector{<:DEFAULT_OSM_ID_TYPE})
     locations = [g.nodes[n].location for n in node_ids]
     cartesian_locations = to_cartesian(locations)
     idxs, dists = knn(g.kdtree, cartesian_locations, 2, true)
@@ -89,8 +89,8 @@ function nearest_nodes(g::OSMGraph, points::AbstractVector{GeoLocation}, n_neigh
 end
 
 """
-    nearest_nodes(g::OSMGraph, node_id::Integer, n_neighbours::Integer=1)
-    nearest_nodes(g::OSMGraph, node_ids::Vector{<:Integer}, n_neighbours::Integer=1)
+    nearest_nodes(g::OSMGraph, node_id::DEFAULT_OSM_ID_TYPE, n_neighbours::Integer=1)
+    nearest_nodes(g::OSMGraph, node_ids::Vector{<:DEFAULT_OSM_ID_TYPE}, n_neighbours::Integer=1)
     nearest_nodes(g::OSMGraph, node::Node, n_neighbours::Integer=1)
     nearest_nodes(g::OSMGraph, nodes::AbstractVector{<:Node}, n_neighbours::Integer=1)
 
@@ -106,9 +106,9 @@ Finds nearest nodes from a point or `Vector` of points using a `NearestNeighbors
     Tuple elements are `Vector{Vector}` if a `Vector` of points is inputted, and `Vector` if a single point is inputted.
 """
 nearest_nodes(g::OSMGraph, node::Node, n_neighbours::Integer=1) = nearest_nodes(g, node.location, n_neighbours, (index)->index==g.node_to_index[node.id])
-nearest_nodes(g::OSMGraph, node_id::Integer, n_neighbours::Integer=1) = nearest_nodes(g, g.nodes[node_id], n_neighbours)
+nearest_nodes(g::OSMGraph, node_id::DEFAULT_OSM_ID_TYPE, n_neighbours::Integer=1) = nearest_nodes(g, g.nodes[node_id], n_neighbours)
 nearest_nodes(g::OSMGraph, nodes::Vector{<:Node}, n_neighbours::Integer=1) = nearest_nodes(g, [n.id for n in nodes], n_neighbours)
-function nearest_nodes(g::OSMGraph, node_ids::Vector{<:Integer}, n_neighbours::Integer=1)
+function nearest_nodes(g::OSMGraph, node_ids::Vector{<:DEFAULT_OSM_ID_TYPE}, n_neighbours::Integer=1)
     locations = [g.nodes[n].location for n in node_ids]
     n_neighbours += 1 # Closest node is always the input node itself, exclude self from result
     cartesian_locations = to_cartesian(locations)

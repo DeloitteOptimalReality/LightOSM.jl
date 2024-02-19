@@ -89,7 +89,7 @@ function nearest_ways(g::OSMGraph{U,T,W},
 end
 
 """
-    nearest_point_on_way(g::OSMGraph, point::GeoLocation, way_id::Integer)
+    nearest_point_on_way(g::OSMGraph, point::GeoLocation, way_id::DEFAULT_OSM_ID_TYPE)
 
 Finds the nearest position on a way to a given point. Matches to an `EdgePoint`.
 
@@ -103,7 +103,7 @@ Finds the nearest position on a way to a given point. Matches to an `EdgePoint`.
   - `::EdgePoint`: Nearest position along the way between two nodes.
   - `::Float64`: Distance from `point` to the nearest position on the way.
 """
-function nearest_point_on_way(g::OSMGraph, point::GeoLocation, way_id::Integer)
+function nearest_point_on_way(g::OSMGraph, point::GeoLocation, way_id::DEFAULT_OSM_ID_TYPE)
     nodes = g.ways[way_id].nodes
     min_edge = nothing
     min_dist = floatmax()

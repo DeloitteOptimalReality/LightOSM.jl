@@ -122,7 +122,7 @@ is_restriction(tags::AbstractDict)::Bool = get(tags, "type", "") == "restriction
 """
 Determine if a restriction is valid and has usable data.
 """
-function is_valid_restriction(members::AbstractArray, ways::AbstractDict{T,Way{T}})::Bool where T <: Integer
+function is_valid_restriction(members::AbstractArray, ways::AbstractDict{T,Way{T}})::Bool where T <: DEFAULT_OSM_ID_TYPE
     role_counts = DefaultDict(0)
     role_type_counts = DefaultDict(0)
     ways_set = Set{Int}()
@@ -201,13 +201,14 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict,
                                 network_type::Symbol=:drive;
                                 filter_network_type::Bool=true
                                 )::OSMGraph
+    
     U = DEFAULT_OSM_INDEX_TYPE
-    T = DEFAULT_OSM_ID_TYPE
+    T = get_id_type(osm_network_dict)
     W = DEFAULT_OSM_EDGE_WEIGHT_TYPE
     L = DEFAULT_OSM_LANES_TYPE
 
     ways = Dict{T,Way{T}}()
-    highway_nodes = Set{Int}([])
+    highway_nodes = Set{T}([])
     for way in osm_network_dict["way"]
         if haskey(way, "tags") && haskey(way, "nodes")
             tags = way["tags"]
@@ -362,4 +363,26 @@ function init_graph_from_object(osm_json_object::AbstractDict,
         network_type; 
         filter_network_type=filter_network_type
     )
+end
+
+
+"""
+    get_id_type(osm_network_dict::AbstractDict)::Type
+
+Finds the node id type of an osm dict.
+"""
+function get_id_type(osm_network_dict::AbstractDict)::Type
+    if isempty(osm_network_dict["node"])
+        return Int64
+    end
+    
+    first_id = osm_network_dict["node"][1]["id"]
+
+    if first_id isa Integer
+        return Int64
+    elseif first_id isa String
+        return String
+    else
+        throw(ErrorException("OSM ID type not supported: $(typeof(first_id))"))
+    end
 end

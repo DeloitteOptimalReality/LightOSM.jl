@@ -439,7 +439,7 @@ function download_osm_network(download_method::Symbol;
 
     if !(save_to_file_location isa Nothing)
         save_to_file_location = validate_save_location(save_to_file_location, download_format)
-        write(save_to_file_location, data)
+        Base.write(save_to_file_location, data)
         @info "Saved osm network data to disk: $save_to_file_location"
     end
 

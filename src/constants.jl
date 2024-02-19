@@ -1,8 +1,8 @@
 """
 Default data types used to construct OSMGraph object.
 """
-const DEFAULT_OSM_ID_TYPE = Int64
 const DEFAULT_OSM_INDEX_TYPE = Int32
+const DEFAULT_OSM_ID_TYPE = Union{Integer, String}
 const DEFAULT_OSM_EDGE_WEIGHT_TYPE = Float64
 const DEFAULT_OSM_MAXSPEED_TYPE = Int16
 const DEFAULT_OSM_LANES_TYPE = Int8

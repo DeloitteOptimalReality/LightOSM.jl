@@ -18,7 +18,8 @@ const TEST_OSM_URL = "https://raw.githubusercontent.com/DeloitteOptimalReality/L
     @testset "Download" begin include("download.jl") end
     @testset "Nearest Node" begin include("nearest_node.jl") end
     @testset "Nearest Way" begin include("nearest_way.jl") end
-    @testset "Shortest Path" begin include("shortest_path.jl") end
+    @testset "Shortest Path Integer" begin include("shortest_path_int.jl") end
+    @testset "Shortest Path String" begin include("shortest_path_str.jl") end
     @testset "Graph" begin include("graph.jl") end
     @testset "Traversal" begin include("traversal.jl") end
     @testset "Subgraph" begin include("subgraph.jl") end
