@@ -46,8 +46,8 @@ Calculates the shortest path between two OpenStreetMap node ids.
 """
 function shortest_path(::Type{A},
                        g::OSMGraph{U,T,W},
-                       origin::Integer,
-                       destination::Integer,
+                       origin::DEFAULT_OSM_ID_TYPE,
+                       destination::DEFAULT_OSM_ID_TYPE,
                        weights::AbstractMatrix{W};
                        cost_adjustment::Function=(u, v, parents) -> 0.0,
                        max_distance::W=typemax(W)
@@ -60,8 +60,8 @@ function shortest_path(::Type{A},
 end
 function shortest_path(::Type{A},
                        g::OSMGraph{U,T,W},
-                       origin::Integer,
-                       destination::Integer,
+                       origin::DEFAULT_OSM_ID_TYPE,
+                       destination::DEFAULT_OSM_ID_TYPE,
                        weights::AbstractMatrix{W};
                        cost_adjustment::Function=(u, v, parents) -> 0.0,
                        heuristic::Function=distance_heuristic(g),
@@ -73,10 +73,10 @@ function shortest_path(::Type{A},
     isnothing(path) && return
     return index_to_node_id(g, path)
 end
-function shortest_path(::Type{A}, g::OSMGraph{U,T,W}, origin::Integer, destination::Integer; kwargs...)::Union{Nothing,Vector{T}} where {A <: PathAlgorithm, U, T, W}
+function shortest_path(::Type{A}, g::OSMGraph{U,T,W}, origin::DEFAULT_OSM_ID_TYPE, destination::DEFAULT_OSM_ID_TYPE; kwargs...)::Union{Nothing,Vector{T}} where {A <: PathAlgorithm, U, T, W}
     return shortest_path(A, g, origin, destination, g.weights; kwargs...)
 end
-function shortest_path(::Type{A}, g::OSMGraph{U,T,W}, origin::Node{<:Integer}, destination::Node{<:Integer}, args...; kwargs...)::Union{Nothing,Vector{T}} where {A <: PathAlgorithm, U, T, W}
+function shortest_path(::Type{A}, g::OSMGraph{U,T,W}, origin::Node{<:DEFAULT_OSM_ID_TYPE}, destination::Node{<:DEFAULT_OSM_ID_TYPE}, args...; kwargs...)::Union{Nothing,Vector{T}} where {A <: PathAlgorithm, U, T, W}
     return shortest_path(A, g, origin.id, destination.id, args...; kwargs...)
 end
 function shortest_path(g::OSMGraph{U,T,W}, args...;  kwargs...)::Union{Nothing,Vector{T}} where {U, T, W}
@@ -162,7 +162,7 @@ function is_restricted(restriction_ll::MutableLinkedList{V}, u::U, v::U, parents
 end
 
 """
-    restriction_cost(restrictions::AbstractDict{V,Vector{MutableLinkedList{V}}}, u::U, v::U, parents::Vector{U})::Float64 where {U <: Integer,V <: Integer}
+    restriction_cost(restrictions::AbstractDict{V,Vector{MutableLinkedList{V}}}, u::U, v::U, parents::Vector{U})::Float64 where {U <: DEFAULT_OSM_INDEX_TYPE,V <: Integer}
 
 Given parents, returns `Inf64` if path between `u` and `v` is restricted by the set of restriction linked lists, `0.0` otherwise.
 
@@ -175,7 +175,7 @@ Given parents, returns `Inf64` if path between `u` and `v` is restricted by the 
 # Return
 - `Float64`: Returns `Inf64` if path between u and v is restricted, `0.0` otherwise.
 """
-function restriction_cost(restrictions::AbstractDict{V,Vector{MutableLinkedList{V}}}, u::U, v::U, parents::P)::Float64 where {P <: Union{<:AbstractVector{<:U}, <:AbstractDict{<:U, <:U}}} where {U <: Integer,V <: Integer}
+function restriction_cost(restrictions::AbstractDict{V,Vector{MutableLinkedList{V}}}, u::U, v::U, parents::P)::Float64 where {P <: Union{<:AbstractVector{<:U}, <:AbstractDict{<:U, <:U}}} where {U <: DEFAULT_OSM_INDEX_TYPE,V <: Integer}
     !haskey(restrictions, u) && return 0.0
 
     for ll in restrictions[u]
@@ -217,7 +217,7 @@ hence we pick the largest maxspeed across all ways.
 time_heuristic(g::OSMGraph) = (u, v) -> haversine(g.node_coordinates[u], g.node_coordinates[v]) / 100.0
 
 """
-    weights_from_path(g::OSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::Vector{W} where {U <: Integer,T <: Integer,W <: Real}
+    weights_from_path(g::OSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::Vector{W} where {U <: DEFAULT_OSM_INDEX_TYPE,T <: DEFAULT_OSM_ID_TYPE,W <: Real}
 
 Extracts edge weights from a path using the weight matrix stored in `g.weights` unless
 a different matrix is passed to the `weights` kwarg.
@@ -230,12 +230,12 @@ a different matrix is passed to the `weights` kwarg.
 # Return
 - `Vector{W}`: Array of edge weights, distances are in km, time is in hours.
 """
-function weights_from_path(g::OSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::Vector{W} where {U <: Integer,T <: Integer,W <: Real}
+function weights_from_path(g::OSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::Vector{W} where {U <: DEFAULT_OSM_INDEX_TYPE,T <: DEFAULT_OSM_ID_TYPE,W <: Real}
     return [weights[g.node_to_index[path[i]], g.node_to_index[path[i + 1]]] for i in 1:length(path) - 1]
 end
 
 """
-    total_path_weight(g::OSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::W where {U <: Integer,T <: Integer,W <: Real}
+    total_path_weight(g::OSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::W where {U <: Integer,T <: DEFAULT_OSM_ID_TYPE,W <: Real}
 
 Extract total edge weight along a path.
 
@@ -247,7 +247,7 @@ Extract total edge weight along a path.
 # Return
 - `sum::W`: Total path edge weight, distances are in km, time is in hours.
 """
-function total_path_weight(g::OSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::W where {U <: Integer,T <: Integer,W <: Real}
+function total_path_weight(g::OSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::W where {U <: Integer,T <: DEFAULT_OSM_ID_TYPE,W <: Real}
     sum::W = zero(W)
     for i in 1:length(path) - 1
         sum += weights[g.node_to_index[path[i]], g.node_to_index[path[i + 1]]]

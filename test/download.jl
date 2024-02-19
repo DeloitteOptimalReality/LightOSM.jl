@@ -45,7 +45,7 @@ end
 end
 
 @testset "Download with custom filters" begin
-    filename = "map.json"
+    filename = normpath("map.json") # for compatability with Windows
     format = :json
     #=
     Compared to the defauilt network_type=:drive, this filter:
