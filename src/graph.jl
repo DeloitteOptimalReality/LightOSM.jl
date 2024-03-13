@@ -1,11 +1,13 @@
 """
     graph_from_object(osm_data_object::Union{XMLDocument,Dict};
-                      network_type::Symbol=:drive,
-                      weight_type::Symbol=:time,
-                      graph_type::Symbol=:static,
-                      precompute_dijkstra_states::Bool=false,
-                      largest_connected_component::Bool=true
-                      )::OSMGraph
+                    network_type::Symbol=:drive,
+                    weight_type::Symbol=:time,
+                    graph_type::Symbol=:static,
+                    precompute_dijkstra_states::Bool=false,
+                    largest_connected_component::Bool=true,
+                    filter_network_type::Bool=true,
+                    tags_filter::Dict{String, Vector{String}}=Dict{String, Vector{String}}()
+                    )::OSMGraph
 
 Creates an `OSMGraph` object from download OpenStreetMap network data, use with 
 `download_osm_network`.
@@ -41,15 +43,18 @@ function graph_from_object(osm_data_object::Union{XMLDocument,Dict};
                            graph_type::Symbol=:static,
                            precompute_dijkstra_states::Bool=false,
                            largest_connected_component::Bool=true,
-                           filter_network_type::Bool=true
+                           filter_network_type::Bool=true,
+                           tags_filter::Dict{String, Vector{String}}=Dict{String, Vector{String}}()
                            )::OSMGraph
-    g = init_graph_from_object(osm_data_object, network_type, filter_network_type=filter_network_type)
+    
+    g = init_graph_from_object(osm_data_object, network_type, tags_filter, filter_network_type=filter_network_type)
     add_node_and_edge_mappings!(g)
     add_weights!(g, weight_type)
     add_graph!(g, graph_type)
     # Finding connected components can only be done after LightGraph object has been constructed
     largest_connected_component && trim_to_largest_connected_component!(g, g.graph, weight_type, graph_type) # Pass in graph to make type stable
     add_node_tags!(g)
+    !isempty(tags_filter) && add_custom_node_tags!(g, tags_filter)
     !(network_type in [:bike, :walk]) && add_indexed_restrictions!(g)
 
     if precompute_dijkstra_states
@@ -95,7 +100,8 @@ function graph_from_file(file_path::String;
                          graph_type::Symbol=:static,
                          precompute_dijkstra_states::Bool=false,
                          largest_connected_component::Bool=true,
-                         filter_network_type::Bool=true
+                         filter_network_type::Bool=true,
+                         tags_filter::Dict{String, Vector{String}}=Dict{String, Vector{String}}()
                          )::OSMGraph
 
     !isfile(file_path) && throw(ArgumentError("File $file_path does not exist"))
@@ -107,7 +113,8 @@ function graph_from_file(file_path::String;
                              graph_type=graph_type,
                              precompute_dijkstra_states=precompute_dijkstra_states,
                              largest_connected_component=largest_connected_component,
-                             filter_network_type=filter_network_type)
+                             filter_network_type=filter_network_type,
+                             tags_filter=tags_filter)
 end
 
 """
@@ -264,6 +271,31 @@ function add_node_tags!(g::OSMGraph)
         push!(g.node_coordinates, [data.location.lat, data.location.lon])
     end
 end
+       """
+       add_custom_node_tags!(g::OSMGraph, tags_filter::Dict{String, Vector} = Dict{String, String}())
+
+Based on the provided dictionary of custom tags adds them to the node
+"""
+function add_custom_node_tags!(g::OSMGraph, tags_filter)
+    for (id, data) in g.nodes
+        tags_filter_dict = Dict{String, Any}()
+        ways = g.node_to_way[id]
+        for way_id in ways
+            way = g.ways[way_id]
+            for (key, value) in pairs(tags_filter)
+                !haskey(way.tags, key) && continue
+                !haskey(tags_filter_dict, key) && (tags_filter_dict[key] = Dict())
+                for v in value
+                    !haskey(way.tags[key], v) && continue
+                    !haskey(tags_filter_dict[key], v) && (tags_filter_dict[key][v] = [])
+                    push!(tags_filter_dict[key][v], way.tags[key][v])
+                end
+            end
+        end
+        g.nodes[id].tags = tags_filter_dict
+    end
+end
+
 
 """
     adjacent_node(g::OSMGraph, node::T, way::T)::Union{T,Vector{<:T}} where T <: DEFAULT_OSM_ID_TYPE
@@ -291,6 +323,8 @@ function adjacent_node(g::OSMGraph, node::T, way::T)::Union{T,Vector{<:T}} where
         end
     end
 end
+
+
 
 """
     add_indexed_restrictions!(g::OSMGraph{U,T,W}) where {U <: DEFAULT_OSM_INDEX_TYPE, T <: DEFAULT_OSM_ID_TYPE, W <: Real}

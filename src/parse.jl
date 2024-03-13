@@ -198,8 +198,9 @@ end
 Parse OpenStreetMap data into `Node`, `Way` and `Restriction` objects.
 """
 function parse_osm_network_dict(osm_network_dict::AbstractDict, 
-                                network_type::Symbol=:drive;
-                                filter_network_type::Bool=true
+                                network_type::Symbol=:drive,
+                                tags_filter::Dict{String, Vector{String}}=Dict{String, Vector{String}}();
+                                filter_network_type::Bool=true,
                                 )::OSMGraph
     
     U = DEFAULT_OSM_INDEX_TYPE
@@ -217,6 +218,8 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict,
                 tags["lanes"] = lanes(tags)
                 tags["oneway"] = is_oneway(tags)
                 tags["reverseway"] = is_reverseway(tags)
+                # Check if custom tags need to be added
+                !isempty(tags_filter) && (tags = add_custom_way_tags(tags, tags_filter, way))
                 nds = way["nodes"]
                 union!(highway_nodes, nds)
                 id = way["id"]
@@ -231,6 +234,8 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict,
                 tags["maxspeed"] = maxspeed(tags)
                 tags["oneway"] = is_oneway(tags)
                 tags["reverseway"] = is_reverseway(tags)
+                # Check if custom tags need to be added
+                !isempty(tags_filter) && (tags = add_custom_way_tags(tags, tags_filter, way))
                 nds = way["nodes"]
                 union!(highway_nodes, nds)
                 id = way["id"]
@@ -339,13 +344,15 @@ end
 Initialises the OSMGraph object from OpenStreetMap data downloaded in `:xml` or `:osm` format.
 """
 function init_graph_from_object(osm_xml_object::XMLDocument, 
-                                network_type::Symbol=:drive;
-                                filter_network_type::Bool=true
+                                network_type::Symbol=:drive,
+                                tags_filter::Dict{String, Vector{String}}=Dict{String, Vector{String}}();
+                                filter_network_type::Bool=true,
                                 )::OSMGraph
     dict_to_parse = osm_dict_from_xml(osm_xml_object)
     return parse_osm_network_dict(
-        dict_to_parse, 
-        network_type; 
+        dict_to_parse,
+        network_type, 
+        tags_filter;
         filter_network_type=filter_network_type
     )
 end
@@ -354,13 +361,15 @@ end
 Initialises the OSMGraph object from OpenStreetMap data downloaded in `:json` format.
 """
 function init_graph_from_object(osm_json_object::AbstractDict, 
-                                network_type::Symbol=:drive;
+                                network_type::Symbol=:drive,
+                                tags_filter::Dict{String, Vector{String}}=Dict{String, Vector{String}}();
                                 filter_network_type::Bool=true
                                 )::OSMGraph
     dict_to_parse = osm_dict_from_json(osm_json_object)
     return parse_osm_network_dict(
-        dict_to_parse, 
-        network_type; 
+        dict_to_parse,
+        network_type, 
+        tags_filter; 
         filter_network_type=filter_network_type
     )
 end
@@ -385,4 +394,15 @@ function get_id_type(osm_network_dict::AbstractDict)::Type
     else
         throw(ErrorException("OSM ID type not supported: $(typeof(first_id))"))
     end
+end
+
+function add_custom_way_tags(tags, tags_filter, way)
+    for (key, value) in pairs(tags_filter)
+        !haskey(way, key) && continue
+        tags[key] = Dict()
+        for v in value
+            haskey(way[key], v) && (tags[key][v] = way[key][v])
+        end
+    end
+    return tags
 end
