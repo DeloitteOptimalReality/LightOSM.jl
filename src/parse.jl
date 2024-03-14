@@ -227,7 +227,7 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict,
                 tags["gauge"] = get(tags, "gauge", nothing)
                 tags["usage"] = get(tags, "usage",  "unknown")
                 tags["name"] = get(tags, "name", "unknown")
-                tags["lanes"] = L(get(tags, "tracks", 1))
+                tags["lanes"] = lanes(tags)
                 tags["maxspeed"] = maxspeed(tags)
                 tags["oneway"] = is_oneway(tags)
                 tags["reverseway"] = is_reverseway(tags)
