@@ -29,8 +29,8 @@ function maxspeed(tags::AbstractDict)::DEFAULT_OSM_MAXSPEED_TYPE
         end
     else
         highway_type = get(tags, "highway", "other")
-        key = getkey(DEFAULT_MAXSPEEDS[], highway_type, "other")
-        return U(DEFAULT_MAXSPEEDS[][key])
+        value = get(() -> DEFAULT_MAXSPEEDS[]["other"], DEFAULT_MAXSPEEDS[], highway_type)
+        return U(value)
     end
 end
 
@@ -55,8 +55,8 @@ function lanes(tags::AbstractDict)::DEFAULT_OSM_LANES_TYPE
         end
     else
         highway_type = get(tags, "highway", "other")
-        key = getkey(DEFAULT_LANES[], highway_type, "other")
-        return U(DEFAULT_LANES[][key])
+        value = get(() -> DEFAULT_LANES[]["other"], DEFAULT_LANES[], highway_type)
+        return U(value)
     end
 end
 
@@ -80,8 +80,8 @@ function is_oneway(tags::AbstractDict)::Bool
         return true
     else
         highway_type = get(tags, "highway", "other")
-        key = getkey(DEFAULT_ONEWAY, highway_type, "other")
-        return DEFAULT_ONEWAY[key]
+        value = get(() -> DEFAULT_ONEWAY["other"], DEFAULT_ONEWAY, highway_type)
+        return value
     end
 end
 
