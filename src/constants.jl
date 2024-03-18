@@ -154,9 +154,9 @@ const DEFAULT_MAXSPEEDS = Ref(Dict{String,DEFAULT_OSM_MAXSPEED_TYPE}(
 ))
 
 """
-Default number of lanes based on highway type. 
+Default number of lanes based on highway type in one direction of the road.
 """
-const DEFAULT_LANES = Ref(Dict{String,DEFAULT_OSM_LANES_TYPE}(
+const DEFAULT_LANES_ONE_WAY = Ref(Dict{String,DEFAULT_OSM_LANES_TYPE}(
     "motorway" => 3,
     "trunk" => 3,
     "primary" => 2,
@@ -166,6 +166,14 @@ const DEFAULT_LANES = Ref(Dict{String,DEFAULT_OSM_LANES_TYPE}(
     "residential" => 1,
     "other" => 1
 ))
+
+"""
+Default number of lanes:both_ways based in highway type.
+"""
+const DEFAULT_LANES_BOTH_WAYS = Ref(Dict{String,DEFAULT_OSM_LANES_TYPE}(
+    "other" => 0
+))
+
 
 """
 Default oneway attribute based on highway type. 
@@ -225,8 +233,8 @@ optional.
 
 # Keyword Arguments
 - `maxspeeds::AbstractDict{String,<:Real}`: If no `maxspeed` way tag is available, these 
-    values are used instead based on the value of the `highway` way tag. If no 
-    `highway` way tag is available, the value for `"other"` is used. Unit is km/h. 
+    values are used instead based on the value of the `highway` way tag. If the value of the
+    `highway` tag is not a key of the dictionary, the value for `"other"` is used. Unit is km/h. 
     Default value: 
     ```
     Dict(
@@ -241,8 +249,8 @@ optional.
     )
     ```
 - `lanes::AbstractDict{String,<:Integer}`: If no `lanes` way tag is available, these 
-    values are used instead based on the value of the `highway` way tag. If no 
-    `highway` way tag is available, the value for `"other"` is used. 
+    values are used instead based on the value of the `highway` way tag.  If the value of the
+    `highway` tag is not a key of the dictionary, the value for `"other"` is used.
     Default value: 
     ```
     Dict(
@@ -254,6 +262,15 @@ optional.
         "unclassified" => 1,
         "residential" => 1,
         "other" => 1
+    )
+    ```
+- `lanes_both_ways::AbstractDict{String,<:Integer}`: If no `lanes:both_ways` tag is available, these
+    values are used instead, based on the value of the `highway` way tag.  If the value of the
+    `highway` tag is not a key of the dictionary, the value for `"other"` is used.
+    Default value:
+    ```
+    Dict(
+        "other" => 0
     )
     ```
 - `lane_efficiency::AbstractDict{<:Integer,<:Real}`: Gives the lane efficiency based on 
@@ -281,13 +298,15 @@ optional.
 """
 function set_defaults(;
                       maxspeeds::AbstractDict{String,<:Real}=DEFAULT_MAXSPEEDS[],
-                      lanes::AbstractDict{String,<:Integer}=DEFAULT_LANES[],
+                      lanes::AbstractDict{String,<:Integer}=DEFAULT_LANES_ONE_WAY[],
+                      lanes_both_ways::AbstractDict{String,<:Integer}=DEFAULT_LANES_BOTH_WAYS[],
                       lane_efficiency::AbstractDict{<:Integer,<:Real}=LANE_EFFICIENCY[],
                       building_height_per_level::Real=DEFAULT_BUILDING_HEIGHT_PER_LEVEL[],
                       max_building_levels::Integer=DEFAULT_MAX_BUILDING_LEVELS[]
                       )
     DEFAULT_MAXSPEEDS[] = maxspeeds
-    DEFAULT_LANES[] = lanes
+    DEFAULT_LANES_ONE_WAY[] = lanes
+    DEFAULT_LANES_BOTH_WAYS[] = lanes_both_ways
     LANE_EFFICIENCY[] = lane_efficiency
     DEFAULT_BUILDING_HEIGHT_PER_LEVEL[] = building_height_per_level
     DEFAULT_MAX_BUILDING_LEVELS[] = max_building_levels
