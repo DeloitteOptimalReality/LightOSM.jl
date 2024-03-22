@@ -66,8 +66,11 @@ struct Way{T <: Union{Integer, String}}
     tags::Dict{String,Any}
 end
 Way(id::T, nodes, tags::Dict{String, Any}) where T <: Union{Integer, String} = Way(id, convert(Vector{T}, nodes), tags)
-
-
+# # If "all" then we add all.
+# # Use true false
+# {"vmt_tags" => ["local_road_name", ],
+#     "dtp_other_tags" => ["rma", ]
+#     }
 """
     EdgePoint{T<:Integer}
 
