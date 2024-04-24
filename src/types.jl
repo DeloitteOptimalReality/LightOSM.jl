@@ -88,7 +88,7 @@ end
 OpenStreetMap turn restriction (relation).
 
 # Fields
-`T<:String`
+`T<:Union{Integer, String}`
 - `id::T`: OpenStreetMap relation id.
 - `type::String`: Either a `via_way` or `via_node` turn restriction.
 - `tags::AbstractDict{String,Any}`: Metadata tags.
@@ -97,7 +97,7 @@ OpenStreetMap turn restriction (relation).
 - `via_node::Union{T,Nothing}`: Node id at the centre of the turn restriction.
 - `via_way::Union{Vector{T},Nothing}`: Way id at the centre of the turn restriction.
 - `is_exclusion::Bool`: Turn restrictions such as `no_left_turn`, `no_right_turn` or `no_u_turn`.
-- `is_exclusive::Bool`: Turn restrictions such as `striaght_on_only`, `left_turn_only`, `right_turn_only`.
+- `is_exclusive::Bool`: Turn restrictions such as `straight_on_only`, `left_turn_only`, `right_turn_only`.
 """
 @with_kw struct Restriction{T <: Union{Integer, String}}
     id::T
