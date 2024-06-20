@@ -36,7 +36,7 @@ end
 
     # Get original defaults
     original_maxspeeds = deepcopy(LightOSM.DEFAULT_MAXSPEEDS[])
-    original_lanes = deepcopy(LightOSM.DEFAULT_LANES[])
+    original_lanes = deepcopy(LightOSM.DEFAULT_LANES_ONE_WAY[])
 
     # Create graph using originals
     original_g = LightOSM.graph_from_object(deepcopy(data); graph_type=:static, weight_type=:lane_efficiency)
@@ -76,6 +76,6 @@ end
     # "surface": "asphalt"
     @test original_g.ways[217499573].tags["maxspeed"] == original_maxspeeds["secondary"]
     @test new_g.ways[217499573].tags["maxspeed"] == new_maxspeeds["secondary"]
-    @test original_g.ways[217499573].tags["lanes"] == original_lanes["secondary"]
-    @test new_g.ways[217499573].tags["lanes"] == new_lanes["secondary"]
+    @test original_g.ways[217499573].tags["lanes"] ==  2*original_lanes["secondary"]
+    @test new_g.ways[217499573].tags["lanes"] == 2*new_lanes["secondary"]
 end
