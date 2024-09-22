@@ -355,17 +355,17 @@ function add_indexed_restrictions!(g::OSMGraph{U,T,W}) where {U <: DEFAULT_OSM_I
 end
 
 """
-    add_weights!(g::OSMGraph, weight_type::Symbol=:distance)
+    generate_weights(g::OSMGraph; weight_type::Symbol=:distance)
 
-Adds edge weights to `OSMGraph`.
+Generates a sparse weights matrix for the graph. 
 """
-function add_weights!(g::OSMGraph, weight_type::Symbol=:distance)
+function generate_weights(g::OSMGraph; weight_type::Symbol=:distance)
     n_edges = length(g.edge_to_way)
     o_indices = Vector{Int}(undef, n_edges) # edge origin node indices
     d_indices = Vector{Int}(undef, n_edges) # edge destination node indices
     weights = Vector{Float64}(undef, n_edges)
 
-    W = DEFAULT_OSM_EDGE_WEIGHT_TYPE
+    W = LightOSM.DEFAULT_OSM_EDGE_WEIGHT_TYPE
 
     @inbounds for (i, edge) in enumerate(keys(g.edge_to_way))
         o_loc = g.nodes[edge[1]].location
@@ -377,23 +377,35 @@ function add_weights!(g::OSMGraph, weight_type::Symbol=:distance)
         dist = distance(o_loc, d_loc, :haversine)
         if weight_type == :time || weight_type == :lane_efficiency
             highway = g.edge_to_way[edge]
-            maxspeed = g.ways[highway].tags["maxspeed"]::DEFAULT_OSM_MAXSPEED_TYPE
+            maxspeed = g.ways[highway].tags["maxspeed"]::LightOSM.DEFAULT_OSM_MAXSPEED_TYPE
             if weight_type == :time
                 weight = dist / maxspeed
             else
-                lanes = g.ways[highway].tags["lanes"]::DEFAULT_OSM_LANES_TYPE
-                lane_efficiency = get(LANE_EFFICIENCY[], lanes, 1.0)
+                lanes = g.ways[highway].tags["lanes"]::LightOSM.DEFAULT_OSM_LANES_TYPE
+                lane_efficiency = get(LightOSM.LANE_EFFICIENCY[], lanes, 1.0)
                 weight = dist / (maxspeed * lane_efficiency)
             end
-        else
-            # Distance
+        elseif weight_type == :distance
             weight = dist
+        else
+            weight = Float64[]
         end
         weights[i] = max(weight, eps(W))
     end
 
     n = length(g.nodes)
-    g.weights = sparse(o_indices, d_indices, weights, n, n)
+    weights_matrix = sparse(o_indices, d_indices, weights, n, n)
+    
+    weights_matrix
+end
+
+"""
+    add_weights!(g::OSMGraph, weight_type::Symbol=:distance)
+
+Adds edge weights to `OSMGraph`.
+"""
+function add_weights!(g::OSMGraph, weight_type::Symbol=:distance)
+    g.weights = generate_weights(g; weight_type)
     g.weight_type = weight_type
     return g
 end
