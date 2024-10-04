@@ -181,6 +181,18 @@ struct SimplifiedOSMGraph{U <: Integer, T <: Union{Integer, String}, W <: Real} 
     dijkstra_states::Union{Vector{Vector{U}},Nothing}
 end
 
+function Base.getproperty(g::SimplifiedOSMGraph, field::Symbol)
+    # Ensure renaming of "highways" to "ways" is backwards compatible
+    if field in fieldnames(SimplifiedOSMGraph)
+        return getfield(g, field)
+    elseif field === :edge_to_highway
+        Base.depwarn("`edge_to_highway` field is deprecated, use `edge_to_way` field instead", :getproperty)
+        return getfield(g, :edge_to_way)
+    else
+        return getfield(g.parent, field)
+    end
+end
+
 """
 OpenStreetMap building polygon.
 
