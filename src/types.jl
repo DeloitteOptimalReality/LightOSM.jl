@@ -134,8 +134,8 @@ Container for storing OpenStreetMap node, way, relation and graph related obejct
 """
 
 
-abstract type AbstractOSMGraph end
-@with_kw mutable struct OSMGraph{U <: Integer,T <: Union{Integer, String},W <: Real} <: AbstractOSMGraph
+abstract type AbstractOSMGraph{U <: Integer,T <: Union{Integer, String},W <: Real} end
+@with_kw mutable struct OSMGraph{U,T,W} <: AbstractOSMGraph{U,T,W}
     nodes::Dict{T,Node{T}} = Dict{T,Node{T}}()
     node_coordinates::Vector{Vector{W}} = Vector{Vector{W}}() # needed for astar heuristic
     ways::Dict{T,Way{T}} = Dict{T,Way{T}}()
@@ -169,7 +169,7 @@ function Base.getproperty(g::OSMGraph, field::Symbol)
     end
 end
     
-struct SimplifiedOSMGraph{U <: Integer, T <: Union{Integer, String}, W <: Real} <: AbstractOSMGraph
+struct SimplifiedOSMGraph{U,T,W} <: AbstractOSMGraph{U,T,W}
     parent::OSMGraph{U,T,W}
     node_coordinates::Vector{Vector{W}} # needed for astar heuristic
     node_to_index::OrderedDict{T,U}
