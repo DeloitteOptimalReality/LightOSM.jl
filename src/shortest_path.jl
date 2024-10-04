@@ -1,6 +1,6 @@
 """
     shortest_path([PathAlgorithm,]
-                  g::OSMGraph,
+                  g::AbstractOSMGraph,
                   origin::Union{Integer,Node},
                   destination::Union{Integer,Node},
                   [weights::AbstractMatrix=g.weights;
@@ -21,7 +21,7 @@ Calculates the shortest path between two OpenStreetMap node ids.
         Faster for small graphs and/or long paths.
     - `AStarDict`: A* algorithm using the `Dict` implementation.
         Faster for large graphs and/or short paths.
-- `g::OSMGraph{U,T,W}`: Graph container.
+- `g::AbstractOSMGraph{U,T,W}`: Graph container.
 - `origin::Union{Integer,Node}`: Origin OpenStreetMap node or node id.
 - `destination::Union{Integer,Node},`: Destination OpenStreetMap node or node 
     id.
@@ -45,7 +45,7 @@ Calculates the shortest path between two OpenStreetMap node ids.
     the shortest path.
 """
 function shortest_path(::Type{A},
-                       g::OSMGraph{U,T,W},
+                       g::AbstractOSMGraph{U,T,W},
                        origin::DEFAULT_OSM_ID_TYPE,
                        destination::DEFAULT_OSM_ID_TYPE,
                        weights::AbstractMatrix{W};
@@ -59,7 +59,7 @@ function shortest_path(::Type{A},
     return index_to_node_id(g, path)
 end
 function shortest_path(::Type{A},
-                       g::OSMGraph{U,T,W},
+                       g::AbstractOSMGraph{U,T,W},
                        origin::DEFAULT_OSM_ID_TYPE,
                        destination::DEFAULT_OSM_ID_TYPE,
                        weights::AbstractMatrix{W};
@@ -73,35 +73,35 @@ function shortest_path(::Type{A},
     isnothing(path) && return
     return index_to_node_id(g, path)
 end
-function shortest_path(::Type{A}, g::OSMGraph{U,T,W}, origin::DEFAULT_OSM_ID_TYPE, destination::DEFAULT_OSM_ID_TYPE; kwargs...)::Union{Nothing,Vector{T}} where {A <: PathAlgorithm, U, T, W}
+function shortest_path(::Type{A}, g::AbstractOSMGraph{U,T,W}, origin::DEFAULT_OSM_ID_TYPE, destination::DEFAULT_OSM_ID_TYPE; kwargs...)::Union{Nothing,Vector{T}} where {A <: PathAlgorithm, U, T, W}
     return shortest_path(A, g, origin, destination, g.weights; kwargs...)
 end
-function shortest_path(::Type{A}, g::OSMGraph{U,T,W}, origin::Node{<:DEFAULT_OSM_ID_TYPE}, destination::Node{<:DEFAULT_OSM_ID_TYPE}, args...; kwargs...)::Union{Nothing,Vector{T}} where {A <: PathAlgorithm, U, T, W}
+function shortest_path(::Type{A}, g::AbstractOSMGraph{U,T,W}, origin::Node{<:DEFAULT_OSM_ID_TYPE}, destination::Node{<:DEFAULT_OSM_ID_TYPE}, args...; kwargs...)::Union{Nothing,Vector{T}} where {A <: PathAlgorithm, U, T, W}
     return shortest_path(A, g, origin.id, destination.id, args...; kwargs...)
 end
-function shortest_path(g::OSMGraph{U,T,W}, args...;  kwargs...)::Union{Nothing,Vector{T}} where {U, T, W}
+function shortest_path(g::AbstractOSMGraph{U,T,W}, args...;  kwargs...)::Union{Nothing,Vector{T}} where {U, T, W}
     return shortest_path(Dijkstra, g, args...; kwargs...)
 end
 
 """
-    set_dijkstra_state!(g::OSMGraph, src::Union{Integer,Vecotr{<:Integer}, weights::AbstractMatrix; cost_adjustment::Function=(u, v, parents) -> 0.0)
+    set_dijkstra_state!(g::AbstractOSMGraph, src::Union{Integer,Vecotr{<:Integer}, weights::AbstractMatrix; cost_adjustment::Function=(u, v, parents) -> 0.0)
 
 Compute and set the dijkstra parent states for one or multiple src vertices. Threads are used for multiple srcs.
 Note, computing dijkstra states for all vertices is a O(V² + ElogV) operation, use on large graphs with caution.
 """
-function set_dijkstra_state!(g::OSMGraph, src::Integer, weights::AbstractMatrix; cost_adjustment::Function=(u, v, parents) -> 0.0)
+function set_dijkstra_state!(g::AbstractOSMGraph, src::Integer, weights::AbstractMatrix; cost_adjustment::Function=(u, v, parents) -> 0.0)
     g.dijkstra_states[src] = dijkstra(g.graph, weights, src; cost_adjustment=cost_adjustment)
 end
-function set_dijkstra_state!(g::OSMGraph, srcs::Vector{<:Integer}, weights::AbstractMatrix; cost_adjustment::Function=(u, v, parents) -> 0.0)
+function set_dijkstra_state!(g::AbstractOSMGraph, srcs::Vector{<:Integer}, weights::AbstractMatrix; cost_adjustment::Function=(u, v, parents) -> 0.0)
     Threads.@threads for src in srcs
         set_dijkstra_state!(g, src, weights; cost_adjustment=cost_adjustment)
     end
     return g
 end
-set_dijkstra_state!(g::OSMGraph, src; kwargs...) = set_dijkstra_state!(g, src, g.weights; kwargs...)
+set_dijkstra_state!(g::AbstractOSMGraph, src; kwargs...) = set_dijkstra_state!(g, src, g.weights; kwargs...)
 
 """
-    shortest_path_from_dijkstra_state(g::OSMGraph, origin::Integer, destination::Integer)
+    shortest_path_from_dijkstra_state(g::AbstractOSMGraph, origin::Integer, destination::Integer)
 
 Extract shortest path from precomputed dijkstra state, from `origin` to `detination` node id.
 
@@ -109,14 +109,14 @@ Note, function will raise `UndefRefError: access to undefined reference` if the 
 origin node is not precomputed.
 
 # Arguments
-- `g::OSMGraph`: Graph container.
+- `g::AbstractOSMGraph`: Graph container.
 - `origin::Integer`: Origin OpenStreetMap node or node id.
 - `destination::Integer`: Destination OpenStreetMap node or node id.
 
 # Return
 - `Union{Nothing,Vector{T}}`: Array of OpenStreetMap node ids making up the shortest path.
 """
-function shortest_path_from_dijkstra_state(g::OSMGraph, origin::Integer, destination::Integer)
+function shortest_path_from_dijkstra_state(g::AbstractOSMGraph, origin::Integer, destination::Integer)
     parents = node_id_to_dijkstra_state(g, origin)
     path = path_from_parents(parents, node_id_to_index(g, destination))
     isnothing(path) && return
@@ -186,7 +186,7 @@ function restriction_cost(restrictions::AbstractDict{V,Vector{MutableLinkedList{
 end
 
 """
-    restriction_cost_adjustment(g::OSMGraph)
+    restriction_cost_adjustment(g::AbstractOSMGraph)
 
 Returns the cost adjustment function (user in dijkstra and astar) for restrictions. The return function 
 takes 3 arguments, `u` being the current node, `v` being the neighbour node, `parents` being the array 
@@ -196,16 +196,26 @@ of parent dijkstra states. By default `g.indexed_restrictions` is used to check 
 restriction_cost_adjustment(g::OSMGraph) = (u, v, parents) -> restriction_cost(g.indexed_restrictions, u, v, parents)
 
 """
+    restriction_cost_adjustment(g::SinplifiedOSMGraph)
+
+Returns the cost adjustment function (user in dijkstra and astar) for restrictions. The return function 
+takes 3 arguments, `u` being the current node, `v` being the neighbour node, `parents` being the array 
+of parent dijkstra states. By default `g.indexed_restrictions` is used to check whether the path from 
+`u` to `v` is restricted given all previous nodes in `parents`.
+"""
+restriction_cost_adjustment(g::SimplifiedOSMGraph) = (u, v, parents) -> restriction_cost(g.parent.indexed_restrictions, u, v, parents)
+
+"""
     distance_heuristic(g::OSMGraph)
 
 Returns the heuristic function used in astar shortest path calculation, should be used with a graph with
 `weight_type=:distance`. The heuristic function takes in 2 arguments, `u` being the current node and `v` 
 being the neighbour node, and returns the haversine distance between them.
 """
-distance_heuristic(g::OSMGraph) = (u, v) -> haversine(g.node_coordinates[u], g.node_coordinates[v])
+distance_heuristic(g::AbstractOSMGraph) = (u, v) -> haversine(g.node_coordinates[u], g.node_coordinates[v])
 
 """
-    time_heuristic(g::OSMGraph)
+    time_heuristic(g::AbstractOSMGraph)
 
 Returns the heuristic function used in astar shortest path calculation, should be used with a graph with
 `weight_type=:time` or `weight_type=:lane_efficiency`. The heuristic function takes in 2 arguments, `u` 
@@ -214,40 +224,40 @@ Calculated by dividing the harversine distance by a fixed maxspeed of `100`. Rem
 path, it is important to pick an *underestimating* heuristic that best estimates the cost remaining to the `goal`,
 hence we pick the largest maxspeed across all ways.
 """
-time_heuristic(g::OSMGraph) = (u, v) -> haversine(g.node_coordinates[u], g.node_coordinates[v]) / 100.0
+time_heuristic(g::AbstractOSMGraph) = (u, v) -> haversine(g.node_coordinates[u], g.node_coordinates[v]) / 100.0
 
 """
-    weights_from_path(g::OSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::Vector{W} where {U <: DEFAULT_OSM_INDEX_TYPE,T <: DEFAULT_OSM_ID_TYPE,W <: Real}
+    weights_from_path(g::AbstractOSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::Vector{W} where {U <: DEFAULT_OSM_INDEX_TYPE,T <: DEFAULT_OSM_ID_TYPE,W <: Real}
 
 Extracts edge weights from a path using the weight matrix stored in `g.weights` unless
 a different matrix is passed to the `weights` kwarg.
 
 # Arguments
-- `g::OSMGraph`: Graph container.
+- `g::AbstractOSMGraph`: Graph container.
 - `path::Vector{T}`: Array of OpenStreetMap node ids.
 - `weights=g.weights`: the matrix that the edge weights are extracted from. Defaults to `g.weights`.
 
 # Return
 - `Vector{W}`: Array of edge weights, distances are in km, time is in hours.
 """
-function weights_from_path(g::OSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::Vector{W} where {U <: DEFAULT_OSM_INDEX_TYPE,T <: DEFAULT_OSM_ID_TYPE,W <: Real}
+function weights_from_path(g::AbstractOSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::Vector{W} where {U <: DEFAULT_OSM_INDEX_TYPE,T <: DEFAULT_OSM_ID_TYPE,W <: Real}
     return [weights[g.node_to_index[path[i]], g.node_to_index[path[i + 1]]] for i in 1:length(path) - 1]
 end
 
 """
-    total_path_weight(g::OSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::W where {U <: Integer,T <: DEFAULT_OSM_ID_TYPE,W <: Real}
+    total_path_weight(g::AbstractOSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::W where {U <: Integer,T <: DEFAULT_OSM_ID_TYPE,W <: Real}
 
 Extract total edge weight along a path.
 
 # Arguments
-- `g::OSMGraph`: Graph container.
+- `g::AbstractOSMGraph`: Graph container.
 - `path::Vector{T}`: Array of OpenStreetMap node ids.
 - `weights=g.weights`: the matrix that the edge weights are extracted from. Defaults to `g.weights`.
 
 # Return
 - `sum::W`: Total path edge weight, distances are in km, time is in hours.
 """
-function total_path_weight(g::OSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::W where {U <: Integer,T <: DEFAULT_OSM_ID_TYPE,W <: Real}
+function total_path_weight(g::AbstractOSMGraph{U,T,W}, path::Vector{T}; weights=g.weights)::W where {U <: Integer,T <: DEFAULT_OSM_ID_TYPE,W <: Real}
     sum::W = zero(W)
     for i in 1:length(path) - 1
         sum += weights[g.node_to_index[path[i]], g.node_to_index[path[i + 1]]]
