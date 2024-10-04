@@ -8,7 +8,7 @@ function node_gdf(g::OSMGraph)
     return DataFrame(;id=ids, geom=Point.(geom))
 end
 
-function highway_gdf(g::OSMGraph)
+function way_gdf(g::OSMGraph)
     ids = collect(keys(g.highways))
     _way_coordinates(way) = map(way.nodes) do id
         coordinates(g.nodes[id])
@@ -25,7 +25,7 @@ function node_gdf(sg::SimplifiedOSMGraph)
     return DataFrame(;id=ids, geom=Point.(geom))
 end
 
-highway_gdf(sg::SimplifiedOSMGraph) = highway_gdf(sg.parent)
+way_gdf(sg::SimplifiedOSMGraph) = way_gdf(sg.parent)
 
 function edge_gdf(sg::SimplifiedOSMGraph)
     edge_ids = collect(keys(sg.edges))

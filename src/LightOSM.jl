@@ -76,7 +76,7 @@ export index_to_node_id,
        simplify_graph,
        node_gdf,
        edge_gdf,
-       highway_gdf
+       way_gdf
 
 include("types.jl")
 include("constants.jl")
