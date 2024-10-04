@@ -1,36 +1,23 @@
-using LightOSM, GeoInterface, Plots, DataFrames
-using ArchGDAL: createmultilinestring
+using LightOSM, Plots
 
 g = graph_from_download(
-    :place_name, place_name="moabit, berlin germany",
+    :place_name, 
+    place_name="tiergarten, berlin germany",
     network_type=:bike
 )
-# reverse coordinates for plotting
-reverse!.(g.node_coordinates)
+sg = simplify_graph(g)
 
-g_simple, weights, node_gdf, edge_gdf = simplify_graph(g)
+# check for missing edges
+plot(g, color=:red, linewidth=0.8)
+plot!(edge_gdf(sg).geom, linewidth=1.1, color=:black)
+savefig("edge_validation")
 
-# join edges in mulitlinestring for faster plotting
-all_edges = createmultilinestring(coordinates.(edge_gdf.geom))
+# show original nodes
+plot(sg)
+plot!(node_gdf(g).geom, color=:red, markersize=2.2)
+savefig("original_nodes")
 
-# node validation
-
-# nodes from original graph
-plot(all_edges, color=:black, size=(1200,800))
-scatter!(first.(g.node_coordinates), last.(g.node_coordinates), color=:red)
-
-# nodes from simplified graph
-plot(all_edges, color=:black, size=(1200,800))
-scatter!(node_gdf.geom, color=:green)
-
-
-# edge validation
-
-function highway_gdf(osmg::OSMGraph)
-    function _geometrize_way(way)
-        createlinestring(map(id -> coordinates(osmg.nodes[id]), way.nodes))
-    end
-    geom = map(way -> _geometrize_way(way), values(osmg.highways))
-    return DataFrame(; id = collect(keys(osmg.highways)), geom)
-end
-
+# show relevant nodes
+plot(sg)
+plot!(node_gdf(sg).geom, color=:green, markersize=2.2)
+savefig("relevant_nodes")

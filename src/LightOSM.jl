@@ -17,6 +17,7 @@ using StaticArrays
 using SpatialIndexing
 using DataFrames
 using GeoInterface
+using GeometryBasics
 using RecipesBase
 
 export GeoLocation,

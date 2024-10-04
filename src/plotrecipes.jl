@@ -7,5 +7,5 @@ end
 RecipesBase.@recipe function f(g::AbstractOSMGraph)
     color --> :black
     aspect_ratio --> aspect_ratio(g)
-    MultiLineString(GeoInterface.coordinates.(way_gdf(g).geom))
+    MultiLineString(way_gdf(g).geom)
 end
