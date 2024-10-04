@@ -161,6 +161,8 @@ function Base.getproperty(g::OSMGraph, field::Symbol)
     elseif field === :node_to_highway
         Base.depwarn("`node_to_highway` field is deprecated, use `node_to_way` field instead", :getproperty)
         return getfield(g, :node_to_way)
+    elseif field === :parent
+        return g
     elseif field === :edge_to_highway
         Base.depwarn("`edge_to_highway` field is deprecated, use `edge_to_way` field instead", :getproperty)
         return getfield(g, :edge_to_way)
@@ -171,6 +173,7 @@ end
     
 struct SimplifiedOSMGraph{U,T,W} <: AbstractOSMGraph{U,T,W}
     parent::OSMGraph{U,T,W}
+    nodes::Dict{T,Node{T}}
     node_coordinates::Vector{Vector{W}} # needed for astar heuristic
     node_to_index::OrderedDict{T,U}
     index_to_node::OrderedDict{U,T}

@@ -5,7 +5,25 @@ function aspect_ratio(g::AbstractOSMGraph)
 end
 
 RecipesBase.@recipe function f(g::AbstractOSMGraph)
-    color --> :black
+    # set the aspect ratio
     aspect_ratio --> aspect_ratio(g)
-    MultiLineString(way_gdf(g).geom)
+
+    # way color and thickness
+    color --> :black
+    linewdith --> 1.5
+    # node color and size
+    markercolor --> :blue
+    markersize --> 2
+
+    # plot ways
+    @series begin
+        seriestype := :path
+        MultiLineString(way_gdf(g).geom)
+    end
+
+    # plot nodes
+    @series begin
+        seriestype := :scatter
+        node_gdf(g).geom
+    end
 end

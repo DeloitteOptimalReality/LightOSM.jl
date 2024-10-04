@@ -1,4 +1,4 @@
-using LightOSM, Plots
+using LightOSM, Plots, GeoInterfaceRecipes
 
 g = graph_from_download(
     :place_name, 
@@ -8,8 +8,8 @@ g = graph_from_download(
 sg = simplify_graph(g)
 
 # check for missing edges
-plot(g, color=:red, linewidth=0.8)
-plot!(edge_gdf(sg).geom, linewidth=1.1, color=:black)
+plot(g, color=:red, linewidth=0.8, size=(800, 800))
+plot!(sg, linewidth=1.1, color=:black)
 savefig("edge_validation")
 
 # show original nodes

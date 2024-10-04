@@ -69,6 +69,7 @@ The geometry of the contracted nodes is kept in the edge_gdf DataFrame
 function simplify_graph(g::OSMGraph{U, T, W}) where {U, T, W}
     relevant_nodes = collect(endpoints(g.graph))
     n_relevant = length(relevant_nodes)
+    nodes = Dict{T,Node{T}}()
     graph = DiGraph(n_relevant) 
     weights = similar(g.weights, (n_relevant, n_relevant))
     node_coordinates = Vector{Vector{W}}(undef, n_relevant)
@@ -79,9 +80,10 @@ function simplify_graph(g::OSMGraph{U, T, W}) where {U, T, W}
     for (new_i, old_i) in enumerate(relevant_nodes)
         index_mapping[old_i] = new_i
         node_coordinates[new_i] = g.node_coordinates[old_i]
-        node = g.index_to_node[old_i]
-        index_to_node[new_i] = node
-        node_to_index[node] = new_i
+        osm_id = g.index_to_node[old_i]
+        nodes[osm_id] = g.nodes[osm_id]
+        index_to_node[new_i] = osm_id
+        node_to_index[osm_id] = new_i
     end
 
     edges = Dict{NTuple{3,U}, Vector{U}}()
@@ -106,6 +108,7 @@ function simplify_graph(g::OSMGraph{U, T, W}) where {U, T, W}
 
     return SimplifiedOSMGraph(
                 g,
+                nodes,
                 node_coordinates,
                 node_to_index,
                 index_to_node,

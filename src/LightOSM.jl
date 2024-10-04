@@ -16,8 +16,7 @@ using LightXML
 using StaticArrays
 using SpatialIndexing
 using DataFrames
-using GeoInterface
-using GeometryBasics
+using GeoInterface: MultiLineString, LineString, Point 
 using RecipesBase
 
 export GeoLocation,
