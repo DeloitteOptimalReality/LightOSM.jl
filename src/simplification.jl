@@ -66,12 +66,11 @@ Build a new graph which simplifies the topology of osmg.graph.
 The resulting graph only contains intersections and dead ends from the original graph.
 The geometry of the contracted nodes is kept in the edge_gdf DataFrame
 """
-function simplify_graph(osmg::OSMGraph{U, T, W}) where {U, T, W}
-    g = osmg.graph
-    relevant_nodes = collect(endpoints(g))
+function simplify_graph(g::OSMGraph{U, T, W}) where {U, T, W}
+    relevant_nodes = collect(endpoints(g.graph))
     n_relevant = length(relevant_nodes)
     graph = DiGraph(n_relevant) 
-    weights = similar(osmg.weights, (n_relevant, n_relevant))
+    weights = similar(g.weights, (n_relevant, n_relevant))
     node_coordinates = Vector{Vector{W}}(undef, n_relevant)
     node_to_index = OrderedDict{T,U}()
     index_to_node = OrderedDict{U,T}()
@@ -79,18 +78,19 @@ function simplify_graph(osmg::OSMGraph{U, T, W}) where {U, T, W}
     index_mapping = Dict{U,U}()
     for (new_i, old_i) in enumerate(relevant_nodes)
         index_mapping[old_i] = new_i
-        node_coordinates[new_i] = osmg.node_coordinates[old_i]
-        node = osmg.index_to_node[old_i]
+        node_coordinates[new_i] = g.node_coordinates[old_i]
+        node = g.index_to_node[old_i]
         index_to_node[new_i] = node
         node_to_index[node] = new_i
     end
 
     edges = Dict{NTuple{3,U}, Vector{U}}()
+    edge_to_way = Dict{NTuple{3,U}, Vector{T}}()
     edge_count = Dict{Tuple{U,U}, Int}()
-    for path in paths_to_reduce(g)
+    for path in paths_to_reduce(g.graph)
         u = index_mapping[first(path)]
         v = index_mapping[last(path)]
-        path_weight = total_weight(osmg, path)
+        path_weight = total_weight(g, path)
         if add_edge!(graph, (u, v))
             key = 0
             weights[u, v] = path_weight
@@ -101,15 +101,11 @@ function simplify_graph(osmg::OSMGraph{U, T, W}) where {U, T, W}
             weights[u, v] = min(path_weight, weights[u, v])
         end
         edges[u,v,key] = path
-    end
-
-    edge_to_way = Dict{NTuple{3,U}, Vector{T}}()
-    for (edge, path) in edges
-        edge_to_way[edge] = ways_in_path(osmg, path)
+        edge_to_way[u,v,key] = ways_in_path(g, path)
     end
 
     return SimplifiedOSMGraph(
-                osmg,
+                g,
                 node_coordinates,
                 node_to_index,
                 index_to_node,
