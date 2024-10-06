@@ -80,7 +80,7 @@ function simplify_graph(g::OSMGraph{U, T, W}) where {U, T, W}
     relevant_nodes = collect(endpoints(g.graph))
     n_relevant = length(relevant_nodes)
     nodes = Dict{T,Node{T}}()
-    graph = DiGraph(n_relevant) 
+    graph = DiGraph{U}(n_relevant) 
     weights = similar(g.weights, (n_relevant, n_relevant))
     node_coordinates = Vector{Vector{W}}(undef, n_relevant)
     node_to_index = OrderedDict{T,U}()
