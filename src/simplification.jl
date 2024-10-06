@@ -1,14 +1,24 @@
 
 #adapted from osmnx: https://github.com/gboeing/osmnx/blob/main/osmnx/simplification.py
+"""
+Predicate wether v is source node in g
+"""
+is_source(g::AbstractGraph, v) = outdegree(g, v) == 0
+
+"""
+Predicate wether v is sink node in g
+"""
+is_sink(g::AbstractGraph, v) = indegree(g, v) == 0
+
 
 """
 Predicate wether v is an edge endpoint in the simplified version of g
 """
 function is_endpoint(g::AbstractGraph, v)
     neighbors = all_neighbors(g, v)
-    if v in neighbors # has self loop
+    if is_source(g, v) || is_sink(g, v) 
         return true
-    elseif outdegree(g, v) == 0 || indegree(g, v) == 0 # sink or source
+    elseif v in neighbors # has self loop
         return true
     elseif length(neighbors) != 2 || indegree(g, v) != outdegree(g, v) # change to/from one way
         return true
