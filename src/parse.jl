@@ -134,6 +134,9 @@ function is_valid_restriction(members::AbstractArray, ways::AbstractDict{T,Way{T
         type = member["type"]
         role = member["role"]
 
+        # Members with missing role can be ignored
+        isempty(role) && continue
+
         if type == "way"
             if !haskey(ways, id) || id in ways_set
                 # Cannot process missing and duplicate from/via/to ways
