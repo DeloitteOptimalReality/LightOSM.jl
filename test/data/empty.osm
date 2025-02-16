@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<osm version="0.6" generator="LightOSM.jl">
+  <count id="0">
+    <tag k="nodes" v="0"/>
+    <tag k="ways" v="0"/>
+    <tag k="relations" v="0"/>
+    <tag k="total" v="0"/>
+  </count>
+</osm>

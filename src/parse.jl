@@ -209,7 +209,7 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict,
 
     ways = Dict{T,Way{T}}()
     highway_nodes = Set{T}([])
-    for way in osm_network_dict["way"]
+    for way in get(osm_network_dict, "way", Vector{Dict{String, Any}}())
         if haskey(way, "tags") && haskey(way, "nodes")
             tags = way["tags"]
             if is_highway(tags) && (!filter_network_type || matches_network_type(tags, network_type))
@@ -240,7 +240,7 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict,
     end
 
     nodes = Dict{T,Node{T}}()
-    for node in osm_network_dict["node"]
+    for node in get(osm_network_dict, "node", Vector{Dict{String, Any}}())
         id = node["id"]
         if id in highway_nodes
             nodes[id] = Node{T}(
@@ -252,33 +252,31 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict,
     end
     
     restrictions = Dict{T,Restriction{T}}()
-    if haskey(osm_network_dict, "relation")
-        for relation in osm_network_dict["relation"]
-            if haskey(relation, "tags") && haskey(relation, "members")
-                tags = relation["tags"]
-                members = relation["members"]
+    for relation in  get(osm_network_dict, "relation", Vector{Dict{String, Any}}())
+        if haskey(relation, "tags") && haskey(relation, "members")
+            tags = relation["tags"]
+            members = relation["members"]
 
-                if is_restriction(tags) && is_valid_restriction(members, ways)
-                    restriction_kwargs = DefaultDict(Vector)
-                    for member in members
-                        key = "$(member["role"])_$(member["type"])"
-                        if key == "via_way"
-                            push!(restriction_kwargs[Symbol(key)], member["ref"])
-                        else
-                            restriction_kwargs[Symbol(key)] = member["ref"]
-                        end
+            if is_restriction(tags) && is_valid_restriction(members, ways)
+                restriction_kwargs = DefaultDict(Vector)
+                for member in members
+                    key = "$(member["role"])_$(member["type"])"
+                    if key == "via_way"
+                        push!(restriction_kwargs[Symbol(key)], member["ref"])
+                    else
+                        restriction_kwargs[Symbol(key)] = member["ref"]
                     end
-
-                    id = relation["id"]
-                    restrictions[id] = Restriction{T}(
-                        id=id,
-                        tags=tags,
-                        type=haskey(restriction_kwargs, :via_way) ? "via_way" : "via_node",
-                        is_exclusion=occursin("no", tags["restriction"]) ? true : false,
-                        is_exclusive=occursin("only", tags["restriction"]) ? true : false,
-                        ;restriction_kwargs...
-                    )
                 end
+
+                id = relation["id"]
+                restrictions[id] = Restriction{T}(
+                    id=id,
+                    tags=tags,
+                    type=haskey(restriction_kwargs, :via_way) ? "via_way" : "via_node",
+                    is_exclusion=occursin("no", tags["restriction"]) ? true : false,
+                    is_exclusive=occursin("only", tags["restriction"]) ? true : false,
+                    ;restriction_kwargs...
+                )
             end
         end
     end
@@ -372,7 +370,7 @@ end
 Finds the node id type of an osm dict.
 """
 function get_id_type(osm_network_dict::AbstractDict)::Type
-    if isempty(osm_network_dict["node"])
+    if isempty(osm_network_dict) || isempty(osm_network_dict["node"])
         return Int64
     end
     
