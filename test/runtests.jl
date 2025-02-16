@@ -14,6 +14,7 @@ const TEST_OSM_URL = "https://raw.githubusercontent.com/DeloitteOptimalReality/L
 @testset "LightOSM Tests" begin 
     @testset "Constants" begin include("constants.jl") end
     @testset "Utilities" begin include("utilities.jl") end
+    @testset "Parse" begin include("parse.jl") end
     @testset "Geometry" begin include("geometry.jl") end
     @testset "Download" begin include("download.jl") end
     @testset "Nearest Node" begin include("nearest_node.jl") end
