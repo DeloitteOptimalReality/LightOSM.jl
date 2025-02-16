@@ -250,8 +250,9 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict,
             )
         end
     end
-    
+
     restrictions = Dict{T,Restriction{T}}()
+    restriction_fields = fieldnames(Restriction)
     if haskey(osm_network_dict, "relation")
         for relation in osm_network_dict["relation"]
             if haskey(relation, "tags") && haskey(relation, "members")
@@ -262,6 +263,9 @@ function parse_osm_network_dict(osm_network_dict::AbstractDict,
                     restriction_kwargs = DefaultDict(Vector)
                     for member in members
                         key = "$(member["role"])_$(member["type"])"
+                        if !(Symbol(key) in restriction_fields)
+                            continue
+                        end
                         if key == "via_way"
                             push!(restriction_kwargs[Symbol(key)], member["ref"])
                         else
