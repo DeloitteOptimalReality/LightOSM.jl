@@ -5,7 +5,7 @@ using DataStructures: DefaultDict, OrderedDict, MutableLinkedList
 using QuickHeaps: BinaryHeap, FastMin
 using Statistics: mean
 using SparseArrays: SparseMatrixCSC, sparse, findnz
-using Graphs: AbstractGraph, DiGraph, nv, outneighbors, weakly_connected_components, vertices
+using Graphs: AbstractGraph, DiGraph, nv, outneighbors, weakly_connected_components, vertices, all_neighbors, indegree, outdegree, add_edge!
 using StaticGraphs: StaticDiGraph
 using SimpleWeightedGraphs: SimpleWeightedDiGraph
 using MetaGraphs: MetaDiGraph, set_prop!
@@ -15,9 +15,14 @@ using JSON
 using LightXML
 using StaticArrays
 using SpatialIndexing
+using DataFrames
+using GeoInterface: MultiLineString, LineString, Point 
+using RecipesBase
 
 export GeoLocation,
+       AbstractOSMGraph,
        OSMGraph,
+       SimplifiedOSMGraph,
        Node,
        Way,
        EdgePoint,
@@ -67,7 +72,11 @@ export index_to_node_id,
        set_dijkstra_state_with_index!,
        set_dijkstra_state_with_node_id!,
        maxspeed_from_index,
-       maxspeed_from_node_id
+       maxspeed_from_node_id,
+       simplify_graph,
+       node_gdf,
+       edge_gdf,
+       way_gdf
 
 include("types.jl")
 include("constants.jl")
@@ -83,5 +92,8 @@ include("nearest_node.jl")
 include("nearest_way.jl")
 include("buildings.jl")
 include("subgraph.jl")
+include("simplification.jl")
+include("geodataframes.jl")
+include("plotrecipes.jl")
 
 end # module

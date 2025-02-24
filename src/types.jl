@@ -132,7 +132,10 @@ Container for storing OpenStreetMap node, way, relation and graph related obejct
 - `kdtree::Union{RTree,Nothing}`: R-tree used to calculate nearest nodes.
 - `weight_type::Union{Symbol,Nothing}`: Either `:distance`, `:time` or `:lane_efficiency`.
 """
-@with_kw mutable struct OSMGraph{U <: Integer,T <: Union{Integer, String},W <: Real}
+
+
+abstract type AbstractOSMGraph{U <: Integer,T <: Union{Integer, String},W <: Real} end
+@with_kw mutable struct OSMGraph{U,T,W} <: AbstractOSMGraph{U,T,W}
     nodes::Dict{T,Node{T}} = Dict{T,Node{T}}()
     node_coordinates::Vector{Vector{W}} = Vector{Vector{W}}() # needed for astar heuristic
     ways::Dict{T,Way{T}} = Dict{T,Way{T}}()
@@ -158,11 +161,38 @@ function Base.getproperty(g::OSMGraph, field::Symbol)
     elseif field === :node_to_highway
         Base.depwarn("`node_to_highway` field is deprecated, use `node_to_way` field instead", :getproperty)
         return getfield(g, :node_to_way)
+    elseif field === :parent
+        return g
     elseif field === :edge_to_highway
         Base.depwarn("`edge_to_highway` field is deprecated, use `edge_to_way` field instead", :getproperty)
         return getfield(g, :edge_to_way)
     else
         return getfield(g, field)
+    end
+end
+    
+struct SimplifiedOSMGraph{U,T,W} <: AbstractOSMGraph{U,T,W}
+    parent::OSMGraph{U,T,W}
+    nodes::Dict{T,Node{T}}
+    node_coordinates::Vector{Vector{W}} # needed for astar heuristic
+    node_to_index::OrderedDict{T,U}
+    index_to_node::OrderedDict{U,T}
+    edge_to_way::Dict{NTuple{3, U},Vector{T}}
+    graph::Union{AbstractGraph,Nothing}
+    edges::Dict{NTuple{3, U}, Vector{U}}
+    weights::Union{SparseMatrixCSC{W,U},Nothing}
+    dijkstra_states::Union{Vector{Vector{U}},Nothing}
+end
+
+function Base.getproperty(g::SimplifiedOSMGraph, field::Symbol)
+    # Ensure renaming of "highways" to "ways" is backwards compatible
+    if field in fieldnames(SimplifiedOSMGraph)
+        return getfield(g, field)
+    elseif field === :edge_to_highway
+        Base.depwarn("`edge_to_highway` field is deprecated, use `edge_to_way` field instead", :getproperty)
+        return getfield(g, :edge_to_way)
+    else
+        return getfield(g.parent, field)
     end
 end
 

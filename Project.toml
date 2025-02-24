@@ -4,7 +4,10 @@ authors = ["Jack Chan <jchan2@deloitte.com.au>"]
 version = "0.3.2"
 
 [deps]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+GeoInterface = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
+GeoInterfaceRecipes = "0329782f-3d07-4b52-b9f6-d3137cf03c7a"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
@@ -13,6 +16,7 @@ MetaGraphs = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
 NearestNeighbors = "b8a86587-4115-5ab1-83bc-aa920d37bbce"
 Parameters = "d96e819e-fc66-5662-9728-84c9c7592b0a"
 QuickHeaps = "30b38841-0f52-47f8-a5f8-18d5d4064379"
+RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SpatialIndexing = "d4ead438-fe20-5cc5-a293-4fd39a41b74c"
